@@ -14,16 +14,190 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          appointment_date: string
+          created_at: string | null
+          doctor_id: string
+          id: string
+          notes: string | null
+          patient_id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_date: string
+          created_at?: string | null
+          doctor_id: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          created_at?: string | null
+          doctor_id?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      measurements: {
+        Row: {
+          bilateral_left: string | null
+          bilateral_right: string | null
+          created_at: string | null
+          id: string
+          incisors: string | null
+          notes: string | null
+          patient_id: string
+          unilateral_left: string | null
+          unilateral_right: string | null
+        }
+        Insert: {
+          bilateral_left?: string | null
+          bilateral_right?: string | null
+          created_at?: string | null
+          id?: string
+          incisors?: string | null
+          notes?: string | null
+          patient_id: string
+          unilateral_left?: string | null
+          unilateral_right?: string | null
+        }
+        Update: {
+          bilateral_left?: string | null
+          bilateral_right?: string | null
+          created_at?: string | null
+          id?: string
+          incisors?: string | null
+          notes?: string | null
+          patient_id?: string
+          unilateral_left?: string | null
+          unilateral_right?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurements_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          age: number
+          created_at: string | null
+          doctor_id: string
+          id: string
+          name: string
+          patient_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          age: number
+          created_at?: string | null
+          doctor_id: string
+          id?: string
+          name: string
+          patient_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age?: number
+          created_at?: string | null
+          doctor_id?: string
+          id?: string
+          name?: string
+          patient_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "doctor" | "patient"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +324,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["doctor", "patient"],
+    },
   },
 } as const
