@@ -20,7 +20,7 @@ const RoleSelection = () => {
           <Button
             variant="secondary"
             size="lg"
-            className="w-full text-lg h-16 bg-white hover:bg-white/90 text-success font-bold shadow-lg"
+            className="w-full text-lg h-16 font-bold shadow-lg"
             onClick={() => navigate("/doctor")}
           >
             I am a Doctor
@@ -29,7 +29,7 @@ const RoleSelection = () => {
           <Button
             variant="secondary"
             size="lg"
-            className="w-full text-lg h-16 bg-white hover:bg-white/90 text-success font-bold shadow-lg"
+            className="w-full text-lg h-16 font-bold shadow-lg"
             onClick={() => navigate("/patient-login")}
           >
             I am a Patient
