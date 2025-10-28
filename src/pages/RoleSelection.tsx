@@ -1,8 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const RoleSelection = () => {
   const navigate = useNavigate();
+  const { user, role, setUserRole } = useAuth();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+    } else if (role) {
+      navigate(role === "doctor" ? "/doctor" : "/patient-dashboard");
+    }
+  }, [user, role, navigate]);
+
+  const handleRoleSelect = async (selectedRole: string) => {
+    await setUserRole(selectedRole);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-medical flex flex-col items-center justify-center p-6">
@@ -21,7 +36,7 @@ const RoleSelection = () => {
             variant="secondary"
             size="lg"
             className="w-full text-lg h-16 font-bold shadow-lg"
-            onClick={() => navigate("/doctor")}
+            onClick={() => handleRoleSelect("doctor")}
           >
             I am a Doctor
           </Button>
@@ -30,7 +45,7 @@ const RoleSelection = () => {
             variant="secondary"
             size="lg"
             className="w-full text-lg h-16 font-bold shadow-lg"
-            onClick={() => navigate("/patient-login")}
+            onClick={() => handleRoleSelect("patient")}
           >
             I am a Patient
           </Button>
