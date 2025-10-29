@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-
+import { toast } from "sonner";
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -100,14 +100,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .from("user_roles")
       .insert([{ user_id: user.id, role: selectedRole as any }]);
 
-    if (!error) {
-      setRole(selectedRole);
-      if (selectedRole === "doctor") {
-        navigate("/doctor");
-      } else {
-        navigate("/patient-dashboard");
-      }
+    if (error) {
+      toast.error(error.message || "Failed to set role");
+      return;
     }
+
+    setRole(selectedRole);
+    if (selectedRole === "doctor") {
+      navigate("/doctor");
+    } else {
+      navigate("/patient-dashboard");
+    }
+    toast.success("Role selected");
   };
 
   return (
