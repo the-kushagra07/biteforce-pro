@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, BarChart3, Calendar, ArrowLeft, Settings } from "lucide-react";
+import { FileText, BarChart3, Calendar, ArrowLeft, Settings, Loader2 } from "lucide-react";
 import BiteForceMonitor from "@/components/BiteForceMonitor";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   LineChart,
   Line,
@@ -45,6 +47,7 @@ const PatientDetail = () => {
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [showMonitor, setShowMonitor] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -56,40 +59,54 @@ const PatientDetail = () => {
 
   const fetchPatientData = async () => {
     try {
-      const { data: patientData } = await supabase
+      setLoading(true);
+      const { data: patientData, error: patientError } = await supabase
         .from("patients")
         .select("*")
         .eq("id", patientId)
         .single();
 
+      if (patientError) throw patientError;
       setPatient(patientData);
 
-      const { data: measurementsData } = await supabase
+      const { data: measurementsData, error: measurementsError } = await supabase
         .from("measurements")
         .select("*")
         .eq("patient_id", patientId)
         .order("created_at", { ascending: false });
 
+      if (measurementsError) throw measurementsError;
       setMeasurements(measurementsData || []);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load patient data");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSaveMeasurement = async (data: any) => {
-    await supabase.from("measurements").insert([
-      {
-        patient_id: patientId,
-        unilateral_left: data.unilateralLeft,
-        unilateral_right: data.unilateralRight,
-        bilateral_left: data.bilateralLeft,
-        bilateral_right: data.bilateralRight,
-        incisors: data.incisors,
-      },
-    ]);
-    toast.success("Measurement saved!");
-    setShowMonitor(false);
-    fetchPatientData();
+    try {
+      setSaving(true);
+      const { error } = await supabase.from("measurements").insert([
+        {
+          patient_id: patientId,
+          unilateral_left: data.unilateralLeft,
+          unilateral_right: data.unilateralRight,
+          bilateral_left: data.bilateralLeft,
+          bilateral_right: data.bilateralRight,
+          incisors: data.incisors,
+        },
+      ]);
+      
+      if (error) throw error;
+      toast.success("Measurement saved successfully!");
+      setShowMonitor(false);
+      fetchPatientData();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save measurement");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const prepareChartData = () => {
@@ -103,9 +120,27 @@ const PatientDetail = () => {
     }));
   };
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
-  if (!patient) return <div className="min-h-screen bg-background flex items-center justify-center"><Button onClick={() => navigate("/doctor")}>Back</Button></div>;
+  if (!patient) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="p-8 text-center space-y-4">
+          <h2 className="text-2xl font-bold">Patient Not Found</h2>
+          <p className="text-muted-foreground">The requested patient record could not be found.</p>
+          <Button onClick={() => navigate("/doctor")} variant="medical">
+            Back to Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,14 +167,75 @@ const PatientDetail = () => {
         </TabsList>
 
         <TabsContent value="readings" className="space-y-4 mt-6">
-          {measurements.length === 0 ? <p className="text-center text-muted-foreground py-8">No measurements</p> : measurements.map((m, i) => (
-            <Card key={m.id} className="p-6 space-y-3"><p className="font-semibold">Measurement #{measurements.length - i}</p><p className="text-sm text-muted-foreground">{new Date(m.created_at).toLocaleDateString()}</p><div className="space-y-2"><p>UL: {m.unilateral_left}</p><p>UR: {m.unilateral_right}</p><p>BL: {m.bilateral_left}</p><p>BR: {m.bilateral_right}</p><p>Inc: {m.incisors}</p></div></Card>
-          ))}
+          {measurements.length === 0 ? (
+            <Card className="p-12 text-center space-y-3">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+              <p className="text-lg font-medium">No measurements yet</p>
+              <p className="text-sm text-muted-foreground">Add the first measurement to get started</p>
+            </Card>
+          ) : (
+            measurements.map((m, i) => (
+              <Card key={m.id} className="p-6 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <p className="font-semibold text-lg">Measurement #{measurements.length - i}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(m.created_at).toLocaleDateString()} at {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Unilateral Left</p>
+                    <p className="font-medium">{m.unilateral_left || 'N/A'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Unilateral Right</p>
+                    <p className="font-medium">{m.unilateral_right || 'N/A'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Bilateral Left</p>
+                    <p className="font-medium">{m.bilateral_left || 'N/A'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Bilateral Right</p>
+                    <p className="font-medium">{m.bilateral_right || 'N/A'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Incisors</p>
+                    <p className="font-medium">{m.incisors || 'N/A'}</p>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </TabsContent>
 
         <TabsContent value="graphs" className="mt-6">
-          {measurements.length === 0 ? <Card className="p-8 text-center"><p className="text-muted-foreground">No data</p></Card> : (
-            <Card className="p-6"><h3 className="text-lg font-semibold mb-4">Bite Force Over Time</h3><ResponsiveContainer width="100%" height={400}><LineChart data={prepareChartData()}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip /><Legend /><Line type="monotone" dataKey="UL" stroke="#8884d8" strokeWidth={2} /><Line type="monotone" dataKey="UR" stroke="#82ca9d" strokeWidth={2} /><Line type="monotone" dataKey="BL" stroke="#ffc658" strokeWidth={2} /><Line type="monotone" dataKey="BR" stroke="#ff7c7c" strokeWidth={2} /><Line type="monotone" dataKey="Inc" stroke="#a78bfa" strokeWidth={2} /></LineChart></ResponsiveContainer></Card>
+          {measurements.length === 0 ? (
+            <Card className="p-12 text-center space-y-3">
+              <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground" />
+              <p className="text-lg font-medium">No data to display</p>
+              <p className="text-sm text-muted-foreground">Measurements will appear here as graphs</p>
+            </Card>
+          ) : (
+            <Card className="p-4 sm:p-6">
+              <h3 className="text-lg font-semibold mb-4">Bite Force Over Time</h3>
+              <div className="overflow-x-auto">
+                <ResponsiveContainer width="100%" height={400} minWidth={300}>
+                  <LineChart data={prepareChartData()}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="UL" stroke="hsl(var(--primary))" strokeWidth={2} name="Unilateral Left" />
+                    <Line type="monotone" dataKey="UR" stroke="hsl(var(--success))" strokeWidth={2} name="Unilateral Right" />
+                    <Line type="monotone" dataKey="BL" stroke="hsl(var(--accent))" strokeWidth={2} name="Bilateral Left" />
+                    <Line type="monotone" dataKey="BR" stroke="hsl(var(--destructive))" strokeWidth={2} name="Bilateral Right" />
+                    <Line type="monotone" dataKey="Inc" stroke="hsl(var(--muted-foreground))" strokeWidth={2} name="Incisors" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
           )}
         </TabsContent>
 
@@ -149,11 +245,12 @@ const PatientDetail = () => {
 
       {/* BiteForce Monitor Modal */}
       {showMonitor && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-background rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <BiteForceMonitor
               onSave={handleSaveMeasurement}
               onCancel={() => setShowMonitor(false)}
+              saving={saving}
             />
           </div>
         </div>

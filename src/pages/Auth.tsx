@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus, Loader2 } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -110,7 +110,10 @@ const Auth = () => {
             disabled={loading}
           >
             {loading ? (
-              "Please wait..."
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isLogin ? "Signing in..." : "Creating account..."}
+              </>
             ) : isLogin ? (
               <>
                 <LogIn className="mr-2 h-4 w-4" />

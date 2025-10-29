@@ -7,8 +7,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Settings, Plus, Users, Calendar } from "lucide-react";
+import { Settings, Plus, Users, Calendar, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
@@ -18,6 +20,8 @@ const DoctorDashboard = () => {
   const [patientId, setPatientId] = useState("");
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user || role !== "doctor") {
@@ -28,38 +32,51 @@ const DoctorDashboard = () => {
   }, [user, role]);
 
   const fetchPatients = async () => {
-    const { data } = await supabase
-      .from("patients")
-      .select("*, measurements(count)")
-      .eq("doctor_id", user?.id)
-      .order("created_at", { ascending: false });
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("patients")
+        .select("*, measurements(count)")
+        .eq("doctor_id", user?.id)
+        .order("created_at", { ascending: false });
 
-    if (data) {
-      setPatients(data);
+      if (error) throw error;
+      if (data) {
+        setPatients(data);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load patients");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddPatient = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
-    const { error } = await supabase.from("patients").insert([
-      {
-        doctor_id: user?.id,
-        patient_id: patientId,
-        name,
-        age: parseInt(age),
-      },
-    ]);
+    try {
+      const { error } = await supabase.from("patients").insert([
+        {
+          doctor_id: user?.id,
+          patient_id: patientId,
+          name,
+          age: parseInt(age),
+        },
+      ]);
 
-    if (error) {
-      toast.error("Error adding patient");
-    } else {
+      if (error) throw error;
+      
       toast.success("Patient added successfully!");
       setPatientId("");
       setName("");
       setAge("");
       setShowAddPatient(false);
       fetchPatients();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add patient");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -152,15 +169,23 @@ const DoctorDashboard = () => {
                   placeholder="Age"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button type="submit" variant="medical" className="flex-1">
-                  Add Patient
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button type="submit" variant="medical" className="flex-1" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Patient"
+                  )}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowAddPatient(false)}
                   className="flex-1"
+                  disabled={submitting}
                 >
                   Cancel
                 </Button>
@@ -173,25 +198,40 @@ const DoctorDashboard = () => {
         <div>
           <h2 className="text-2xl font-bold mb-4">Patients</h2>
           <div className="space-y-3">
-            {patients.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No patients yet</p>
+            {loading ? (
+              // Loading skeletons
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-4 w-48" />
+                    </div>
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </Card>
+              ))
+            ) : patients.length === 0 ? (
+              <Card className="p-12 text-center space-y-3">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground" />
+                <p className="text-lg font-medium">No patients yet</p>
+                <p className="text-sm text-muted-foreground">Add your first patient to get started</p>
               </Card>
             ) : (
               patients.map((patient) => (
                 <Card
                   key={patient.id}
-                  className="p-6 cursor-pointer hover:shadow-lg transition-all hover-scale"
+                  className="p-6 cursor-pointer hover-lift"
                   onClick={() => navigate(`/patient/${patient.id}`)}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                       <p className="font-semibold text-lg">{patient.name}</p>
                       <p className="text-sm text-muted-foreground">
                         ID: {patient.patient_id} • Age: {patient.age}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <p className="text-sm text-muted-foreground">
                         {patient.measurements?.[0]?.count || 0} measurements
                       </p>

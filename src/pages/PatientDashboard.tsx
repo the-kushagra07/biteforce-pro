@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Settings, FileText, Calendar, Activity } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PatientData {
   id: string;
@@ -54,7 +56,7 @@ const PatientDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Activity className="h-8 w-8 animate-spin text-primary" />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -129,15 +131,22 @@ const PatientDashboard = () => {
           {patientData.measurements && patientData.measurements.length > 0 ? (
             <div className="space-y-3">
               {patientData.measurements.slice(0, 5).map((m: any) => (
-                <div key={m.id} className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(m.created_at).toLocaleDateString()}
-                  </p>
+                <div key={m.id} className="p-4 border rounded-lg hover-lift">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <p className="font-medium">Measurement</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(m.created_at).toLocaleDateString()} at {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">No measurements recorded yet</p>
+            <div className="text-center py-8 space-y-3">
+              <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground">No measurements recorded yet</p>
+              <p className="text-sm text-muted-foreground">Your doctor will add measurements during appointments</p>
+            </div>
           )}
         </Card>
       </div>

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 interface BiteForceData {
   unilateralLeft: string;
@@ -15,9 +16,10 @@ interface BiteForceData {
 interface BiteForceMonitorProps {
   onSave: (data: BiteForceData) => void;
   onCancel: () => void;
+  saving?: boolean;
 }
 
-const BiteForceMonitor = ({ onSave, onCancel }: BiteForceMonitorProps) => {
+const BiteForceMonitor = ({ onSave, onCancel, saving = false }: BiteForceMonitorProps) => {
   const [data, setData] = useState<BiteForceData>({
     unilateralLeft: "",
     unilateralRight: "",
@@ -102,13 +104,14 @@ const BiteForceMonitor = ({ onSave, onCancel }: BiteForceMonitorProps) => {
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               size="lg"
               className="flex-1"
               onClick={onCancel}
+              disabled={saving}
             >
               Cancel
             </Button>
@@ -117,8 +120,16 @@ const BiteForceMonitor = ({ onSave, onCancel }: BiteForceMonitorProps) => {
               variant="success"
               size="lg"
               className="flex-1 text-lg font-bold"
+              disabled={saving}
             >
-              Save Data
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Data"
+              )}
             </Button>
           </div>
         </form>
