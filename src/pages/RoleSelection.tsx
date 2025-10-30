@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const RoleSelection = () => {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ const RoleSelection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-medical flex flex-col items-center justify-center p-6">
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md space-y-8 text-center animate-fade-in">
         <div className="space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">

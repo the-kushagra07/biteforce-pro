@@ -35,47 +35,37 @@ const Settings = () => {
     try {
       setDeleting(true);
       
-      // Delete user data based on role
-      if (role === "doctor") {
-        // Delete all patients and their measurements
-        const { data: patients } = await supabase
-          .from("patients")
-          .select("id")
-          .eq("doctor_id", user.id);
-        
-        if (patients) {
-          for (const patient of patients) {
-            await supabase.from("measurements").delete().eq("patient_id", patient.id);
-          }
-          await supabase.from("patients").delete().eq("doctor_id", user.id);
-        }
-        await supabase.from("appointments").delete().eq("doctor_id", user.id);
-      } else if (role === "patient") {
-        // For patients, delete their patient record if it exists
-        const { data: patient } = await supabase
-          .from("patients")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        
-        if (patient) {
-          await supabase.from("measurements").delete().eq("patient_id", patient.id);
-          await supabase.from("appointments").delete().eq("patient_id", patient.id);
-          await supabase.from("patients").delete().eq("user_id", user.id);
-        }
+      // Call the edge function to delete the user account completely
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        toast.error("No active session found");
+        return;
       }
-      
-      // Delete user roles
-      await supabase.from("user_roles").delete().eq("user_id", user.id);
-      
-      // Delete profile
-      await supabase.from("profiles").delete().eq("id", user.id);
-      
-      toast.success("Account data deleted successfully");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete account');
+      }
+
+      toast.success("Account deleted successfully");
       await signOut();
       navigate("/");
     } catch (error: any) {
-      toast.error(error.message || "Failed to delete account data");
+      console.error('Delete account error:', error);
+      toast.error(error.message || "Failed to delete account");
     } finally {
       setDeleting(false);
     }
@@ -116,29 +106,31 @@ const Settings = () => {
           </div>
         </Card>
 
-        {/* Theme Section */}
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Appearance</h2>
-            </div>
-            <ThemeToggle />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Toggle between light and dark mode
-          </p>
-        </Card>
 
-        {/* Notifications Section */}
-        <Card className="p-6 space-y-4">
+        {/* Coming Soon Features */}
+        <Card className="p-6 space-y-4 border-primary/20">
           <div className="flex items-center gap-3">
             <Bell className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold">Notifications</h2>
+            <h2 className="text-xl font-semibold">Coming Soon</h2>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Notification preferences (Coming soon)
-          </p>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-muted-foreground">Push Notifications</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Soon</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-muted-foreground">Email Reports</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Soon</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-muted-foreground">Data Export</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Soon</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-muted-foreground">Advanced Analytics</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Soon</span>
+            </div>
+          </div>
         </Card>
 
         {/* Sign Out */}

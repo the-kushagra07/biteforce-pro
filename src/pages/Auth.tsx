@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { LogIn, UserPlus, Loader2 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -54,6 +55,9 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-medical flex items-center justify-center p-4">
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-md p-8 space-y-6 animate-fade-in">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-foreground">BiteForce</h1>
