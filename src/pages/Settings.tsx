@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { ArrowLeft, LogOut, User, Bell, Shield, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, LogOut, User, Bell, Trash2, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -23,6 +25,11 @@ const Settings = () => {
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
   const [deleting, setDeleting] = useState(false);
+  const [notifications, setNotifications] = useState({
+    measurements: true,
+    appointments: true,
+    updates: true,
+  });
 
   const handleSignOut = async () => {
     await signOut();
@@ -106,29 +113,57 @@ const Settings = () => {
           </div>
         </Card>
 
-
-        {/* Coming Soon Features */}
-        <Card className="p-6 space-y-4 border-primary/20">
+        {/* Notifications */}
+        <Card className="p-6 space-y-4">
           <div className="flex items-center gap-3">
             <Bell className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold">Coming Soon</h2>
+            <h2 className="text-xl font-semibold">Notifications</h2>
           </div>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-muted-foreground">Push Notifications</span>
-              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Soon</span>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="measurements">New Measurements</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when new measurements are recorded
+                </p>
+              </div>
+              <Switch
+                id="measurements"
+                checked={notifications.measurements}
+                onCheckedChange={(checked) =>
+                  setNotifications({ ...notifications, measurements: checked })
+                }
+              />
             </div>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-muted-foreground">Email Reports</span>
-              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Soon</span>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="appointments">Appointments</Label>
+                <p className="text-sm text-muted-foreground">
+                  Reminders for upcoming appointments
+                </p>
+              </div>
+              <Switch
+                id="appointments"
+                checked={notifications.appointments}
+                onCheckedChange={(checked) =>
+                  setNotifications({ ...notifications, appointments: checked })
+                }
+              />
             </div>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-muted-foreground">Data Export</span>
-              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Soon</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-muted-foreground">Advanced Analytics</span>
-              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Soon</span>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="updates">Patient Updates</Label>
+                <p className="text-sm text-muted-foreground">
+                  Updates about your {role === "doctor" ? "patients" : "treatment"}
+                </p>
+              </div>
+              <Switch
+                id="updates"
+                checked={notifications.updates}
+                onCheckedChange={(checked) =>
+                  setNotifications({ ...notifications, updates: checked })
+                }
+              />
             </div>
           </div>
         </Card>
