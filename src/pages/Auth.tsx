@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { LogIn, UserPlus, Loader2 } from "lucide-react";
+import { LogIn, UserPlus, Loader2, ArrowLeft } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Auth = () => {
@@ -55,6 +55,16 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-medical flex items-center justify-center p-4">
+      <div className="absolute top-6 left-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="text-white hover:bg-white/20"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+      </div>
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>

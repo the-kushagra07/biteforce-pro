@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Settings, Plus, Users, Calendar, Loader2 } from "lucide-react";
+import { Settings, Plus, Users, Calendar, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -85,9 +85,19 @@ const DoctorDashboard = () => {
       {/* Header */}
       <div className="bg-gradient-medical px-6 py-8 rounded-b-[2rem]">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-white animate-fade-in">
-          <div>
-            <h1 className="text-3xl font-bold">Doctor Dashboard</h1>
-            <p className="text-lg mt-2">Manage your patients</p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="text-white hover:bg-white/10"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Doctor Dashboard</h1>
+              <p className="text-lg mt-2">Manage your patients</p>
+            </div>
           </div>
           <div className="flex gap-2">
             <ThemeToggle />

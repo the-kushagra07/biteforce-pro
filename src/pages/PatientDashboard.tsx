@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Settings, FileText, Calendar, Activity } from "lucide-react";
+import { Settings, FileText, Calendar, Activity, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -79,9 +79,19 @@ const PatientDashboard = () => {
       {/* Header */}
       <div className="bg-gradient-medical px-6 py-8">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-white">
-          <div>
-            <h1 className="text-3xl font-bold">Patient Dashboard</h1>
-            <p className="text-lg mt-2">Welcome, {patientData.name}</p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="text-white hover:bg-white/10"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Patient Dashboard</h1>
+              <p className="text-lg mt-2">Welcome, {patientData.name}</p>
+            </div>
           </div>
           <div className="flex gap-2">
             <ThemeToggle />
