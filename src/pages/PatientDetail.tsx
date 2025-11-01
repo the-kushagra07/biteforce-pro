@@ -174,7 +174,7 @@ const PatientDetail = () => {
             <Button
               onClick={() => setShowMonitor(true)}
               size="lg"
-              variant="outline"
+              variant="navy"
               className="text-lg"
             >
               <FileText className="mr-2 h-5 w-5" />
