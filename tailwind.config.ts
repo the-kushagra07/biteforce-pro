@@ -55,6 +55,8 @@ export default {
       backgroundImage: {
         'gradient-medical': 'linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)))',
         'gradient-purple': 'linear-gradient(135deg, hsl(var(--gradient-purple-start)), hsl(var(--gradient-purple-end)))',
+        'gradient-gunmetal': 'linear-gradient(135deg, hsl(var(--gradient-gunmetal-start)), hsl(var(--gradient-gunmetal-end)))',
+        'gradient-navy': 'linear-gradient(135deg, hsl(var(--gradient-navy-start)), hsl(var(--gradient-navy-end)))',
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -146,7 +146,7 @@ const PatientDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-gradient-purple px-6 py-8 rounded-b-[2rem]">
+      <div className="bg-gradient-navy px-6 py-8 rounded-b-[2rem]">
         <div className="max-w-4xl mx-auto text-white">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
