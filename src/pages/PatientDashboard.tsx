@@ -69,6 +69,14 @@ const PatientDashboard = () => {
           <p className="text-muted-foreground">
             Your doctor needs to create a patient record for you.
           </p>
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="mt-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
         </Card>
       </div>
     );
@@ -79,19 +87,9 @@ const PatientDashboard = () => {
       {/* Header */}
       <div className="bg-gradient-medical px-6 py-8">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-white">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="text-white hover:bg-white/10"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Patient Dashboard</h1>
-              <p className="text-lg mt-2">Welcome, {patientData.name}</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold">Patient Dashboard</h1>
+            <p className="text-lg mt-2">Welcome, {patientData.name}</p>
           </div>
           <div className="flex gap-2">
             <ThemeToggle />

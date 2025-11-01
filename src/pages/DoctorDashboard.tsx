@@ -83,21 +83,11 @@ const DoctorDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-medical px-6 py-8 rounded-b-[2rem]">
-        <div className="max-w-4xl mx-auto flex items-center justify-between text-white animate-fade-in">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="text-white hover:bg-white/10"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Doctor Dashboard</h1>
-              <p className="text-lg mt-2">Manage your patients</p>
-            </div>
+      <div className="bg-gradient-medical px-6 py-8">
+        <div className="max-w-4xl mx-auto flex items-center justify-between text-white">
+          <div>
+            <h1 className="text-3xl font-bold">Doctor Dashboard</h1>
+            <p className="text-lg mt-2">Manage your patients</p>
           </div>
           <div className="flex gap-2">
             <ThemeToggle />

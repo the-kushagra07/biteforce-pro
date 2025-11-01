@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, BarChart3, Calendar, ArrowLeft, Settings, Loader2 } from "lucide-react";
+import { FileText, BarChart3, Calendar, ArrowLeft, Settings, Loader2, Activity } from "lucide-react";
 import BiteForceMonitor from "@/components/BiteForceMonitor";
+import BluetoothBiteForceMonitor from "@/components/BluetoothBiteForceMonitor";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -46,6 +47,7 @@ const PatientDetail = () => {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [showMonitor, setShowMonitor] = useState(false);
+  const [showBluetoothMonitor, setShowBluetoothMonitor] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -158,7 +160,40 @@ const PatientDetail = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
-        <Button variant="medical" size="lg" className="w-full" onClick={() => setShowMonitor(true)}>Add Measurement</Button>
+        {!showMonitor && !showBluetoothMonitor && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button
+              onClick={() => setShowBluetoothMonitor(true)}
+              size="lg"
+              variant="default"
+              className="text-lg"
+            >
+              <Activity className="mr-2 h-5 w-5" />
+              ESP32 BiteForce Monitor
+            </Button>
+            <Button
+              onClick={() => setShowMonitor(true)}
+              size="lg"
+              variant="outline"
+              className="text-lg"
+            >
+              <FileText className="mr-2 h-5 w-5" />
+              Manual Entry
+            </Button>
+          </div>
+        )}
+
+        {showBluetoothMonitor && (
+          <div className="mb-8">
+            <BluetoothBiteForceMonitor
+              patientId={patientId!}
+              onMeasurementSaved={() => {
+                setShowBluetoothMonitor(false);
+                fetchPatientData();
+              }}
+            />
+          </div>
+        )}
 
         <Tabs defaultValue="readings"><TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="readings"><FileText className="w-4 h-4 mr-2" />Readings</TabsTrigger>
