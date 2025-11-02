@@ -94,14 +94,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const setUserRole = async (selectedRole: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("User not authenticated");
+      return;
+    }
 
+    // Check if role already exists
+    const { data: existingRole } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (existingRole) {
+      // Role already exists, just navigate
+      setRole(existingRole.role);
+      if (existingRole.role === "doctor") {
+        navigate("/doctor");
+      } else {
+        navigate("/patient-dashboard");
+      }
+      toast.success("Welcome back!");
+      return;
+    }
+
+    // Insert new role
     const { error } = await supabase
       .from("user_roles")
       .insert([{ user_id: user.id, role: selectedRole as any }]);
 
     if (error) {
-      toast.error(error.message || "Failed to set role");
+      toast.error(`Failed to set role (Code: ${error.code || 'UNKNOWN'})`);
+      console.error("Role insertion error:", error);
       return;
     }
 

@@ -21,16 +21,6 @@ const RoleSelection = () => {
 
   return (
     <div className="min-h-screen bg-gradient-medical flex flex-col items-center justify-center p-6">
-      <div className="absolute top-6 left-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-          className="text-white hover:bg-white/20"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-      </div>
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>
