@@ -62,24 +62,8 @@ const PatientDashboard = () => {
   }
 
   if (!patientData) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="p-8 text-center space-y-4">
-          <h2 className="text-2xl font-bold">No Patient Record Found</h2>
-          <p className="text-muted-foreground">
-            Your doctor needs to create a patient record for you.
-          </p>
-          <Button
-            variant="theme"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Go Back
-          </Button>
-        </Card>
-      </div>
-    );
+    navigate("/role-selection");
+    return null;
   }
 
   return (

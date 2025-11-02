@@ -11,13 +11,9 @@ const Index = () => {
 
   useEffect(() => {
     if (!loading) {
-      if (user && role) {
-        navigate(role === "doctor" ? "/doctor" : "/patient-dashboard");
-      } else {
-        navigate("/role-selection");
-      }
+      navigate("/role-selection");
     }
-  }, [user, role, loading, navigate]);
+  }, [loading, navigate]);
 
   if (loading) {
     return (

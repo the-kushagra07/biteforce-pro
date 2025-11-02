@@ -12,10 +12,8 @@ const RoleSelection = () => {
   useEffect(() => {
     if (!user) {
       navigate("/auth");
-    } else if (role) {
-      navigate(role === "doctor" ? "/doctor" : "/patient-dashboard");
     }
-  }, [user, role, navigate]);
+  }, [user, navigate]);
 
   const handleRoleSelect = async (selectedRole: string) => {
     await setUserRole(selectedRole);
