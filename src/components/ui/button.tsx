@@ -19,6 +19,7 @@ const buttonVariants = cva(
         medical: "bg-gradient-medical text-white hover:opacity-90 shadow-md",
         purple: "bg-gradient-purple text-white hover:opacity-90 shadow-md",
         lightblue: "bg-gradient-lightblue text-white hover:opacity-90 active:bg-gradient-navy shadow-md transition-all",
+        theme: "bg-[hsl(var(--button-theme-bg))] text-[hsl(var(--button-theme-fg))] hover:bg-[hsl(var(--button-theme-hover))] active:bg-gradient-navy active:text-white shadow-sm transition-all",
       },
       size: {
         default: "h-12 px-6 py-3",

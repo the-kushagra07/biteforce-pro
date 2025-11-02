@@ -70,11 +70,11 @@ const PatientDashboard = () => {
             Your doctor needs to create a patient record for you.
           </p>
           <Button
-            variant="lightblue"
+            variant="theme"
             onClick={() => navigate(-1)}
-            className="mt-4"
+            className="flex items-center gap-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Go Back
           </Button>
         </Card>

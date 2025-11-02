@@ -54,6 +54,11 @@ All colors MUST be HSL.
     --gradient-lightblue-end: 200 75% 50%;
     --gradient-navy-start: 220 90% 30%;
     --gradient-navy-end: 220 95% 22%;
+    
+    /* Theme-adaptive button colors */
+    --button-theme-bg: 240 5% 96%;
+    --button-theme-fg: 240 10% 10%;
+    --button-theme-hover: 240 6% 90%;
   }
 
   .dark {
@@ -96,6 +101,11 @@ All colors MUST be HSL.
     --gradient-lightblue-end: 200 75% 50%;
     --gradient-navy-start: 220 90% 30%;
     --gradient-navy-end: 220 95% 22%;
+    
+    /* Theme-adaptive button colors for dark mode */
+    --button-theme-bg: 240 4% 16%;
+    --button-theme-fg: 0 0% 98%;
+    --button-theme-hover: 240 4% 20%;
   }
 }
 

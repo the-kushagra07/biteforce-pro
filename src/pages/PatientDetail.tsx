@@ -147,13 +147,13 @@ const PatientDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-gradient-lightblue px-6 py-8 rounded-b-[2rem]">
-        <div className="max-w-4xl mx-auto text-white">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-white hover:bg-white/10 active:bg-gradient-navy"><ArrowLeft className="h-5 w-5" /></Button>
+              <Button variant="theme" onClick={() => navigate(-1)} className="flex items-center gap-2"><ArrowLeft className="h-4 w-4" />Back</Button>
               <h1 className="text-3xl font-bold">Patient Details</h1>
             </div>
-            <div className="flex gap-2"><ThemeToggle /><Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-white hover:bg-white/10"><Settings className="h-5 w-5" /></Button></div>
+            <div className="flex gap-2"><ThemeToggle /><Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="hover:bg-background/10"><Settings className="h-5 w-5" /></Button></div>
           </div>
           <div className="space-y-1 text-lg"><p>ID: {patient.patient_id}</p><p>Name: {patient.name}</p><p>Age: {patient.age}</p></div>
         </div>
@@ -174,7 +174,7 @@ const PatientDetail = () => {
             <Button
               onClick={() => setShowMonitor(true)}
               size="lg"
-              variant="lightblue"
+              variant="theme"
               className="text-lg"
             >
               <FileText className="mr-2 h-5 w-5" />

@@ -82,15 +82,15 @@ const Settings = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-gradient-lightblue px-6 py-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between text-white">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
-              variant="ghost"
-              size="icon"
+              variant="theme"
               onClick={() => navigate(role === "doctor" ? "/doctor" : "/patient-dashboard")}
-              className="text-white hover:bg-white/10 active:bg-gradient-navy"
+              className="flex items-center gap-2"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
+              Back
             </Button>
             <h1 className="text-2xl font-bold">Settings</h1>
           </div>

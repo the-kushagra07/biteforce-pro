@@ -13,7 +13,7 @@ const Index = () => {
     if (!loading) {
       if (user && role) {
         navigate(role === "doctor" ? "/doctor" : "/patient-dashboard");
-      } else if (user && !role) {
+      } else {
         navigate("/role-selection");
       }
     }
