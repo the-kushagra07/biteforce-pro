@@ -18,7 +18,7 @@ const buttonVariants = cva(
         success: "bg-success text-success-foreground hover:bg-success/90 shadow-sm",
         medical: "bg-gradient-medical text-white hover:opacity-90 shadow-md",
         purple: "bg-gradient-purple text-white hover:opacity-90 shadow-md",
-        navy: "bg-gradient-navy text-white hover:opacity-90 shadow-md",
+        lightblue: "bg-gradient-lightblue text-white hover:opacity-90 active:bg-gradient-navy shadow-md transition-all",
       },
       size: {
         default: "h-12 px-6 py-3",

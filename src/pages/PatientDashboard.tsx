@@ -47,7 +47,7 @@ const PatientDashboard = () => {
         setPatientData(patient as any);
       }
     } catch (error: any) {
-      toast.error("Error loading patient data");
+      toast.error(`Error loading patient data (Code: ${error.code || 'UNKNOWN'})`);
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ const PatientDashboard = () => {
             Your doctor needs to create a patient record for you.
           </p>
           <Button
-            variant="outline"
+            variant="lightblue"
             onClick={() => navigate(-1)}
             className="mt-4"
           >

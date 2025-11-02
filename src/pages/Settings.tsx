@@ -72,7 +72,7 @@ const Settings = () => {
       navigate("/");
     } catch (error: any) {
       console.error('Delete account error:', error);
-      toast.error(error.message || "Failed to delete account");
+      toast.error(`Error: ${error.message || "Failed to delete account"} (Code: ${error.code || 'UNKNOWN'})`);
     } finally {
       setDeleting(false);
     }
@@ -81,14 +81,14 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-gunmetal px-6 py-6">
+      <div className="bg-gradient-lightblue px-6 py-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-white">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate(role === "doctor" ? "/doctor" : "/patient-dashboard")}
-              className="text-white hover:bg-white/10"
+              className="text-white hover:bg-white/10 active:bg-gradient-navy"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>

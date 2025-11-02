@@ -45,7 +45,7 @@ const DoctorDashboard = () => {
         setPatients(data);
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to load patients");
+      toast.error(`Error: ${error.message || "Failed to load patients"} (Code: ${error.code || 'UNKNOWN'})`);
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ const DoctorDashboard = () => {
       setShowAddPatient(false);
       fetchPatients();
     } catch (error: any) {
-      toast.error(error.message || "Failed to add patient");
+      toast.error(`Error: ${error.message || "Failed to add patient"} (Code: ${error.code || 'UNKNOWN'})`);
     } finally {
       setSubmitting(false);
     }

@@ -50,8 +50,8 @@ All colors MUST be HSL.
     --gradient-end: 166 55% 48%;
     --gradient-purple-start: 266 76% 60%;
     --gradient-purple-end: 280 80% 55%;
-    --gradient-gunmetal-start: 210 15% 32%;
-    --gradient-gunmetal-end: 210 18% 25%;
+    --gradient-lightblue-start: 200 70% 60%;
+    --gradient-lightblue-end: 200 75% 50%;
     --gradient-navy-start: 220 90% 30%;
     --gradient-navy-end: 220 95% 22%;
   }
@@ -92,8 +92,8 @@ All colors MUST be HSL.
     --gradient-end: 166 55% 48%;
     --gradient-purple-start: 266 76% 60%;
     --gradient-purple-end: 280 80% 55%;
-    --gradient-gunmetal-start: 210 15% 32%;
-    --gradient-gunmetal-end: 210 18% 25%;
+    --gradient-lightblue-start: 200 70% 60%;
+    --gradient-lightblue-end: 200 75% 50%;
     --gradient-navy-start: 220 90% 30%;
     --gradient-navy-end: 220 95% 22%;
   }

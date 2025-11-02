@@ -107,7 +107,7 @@ const BiteForceMonitor = ({ onSave, onCancel, saving = false }: BiteForceMonitor
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               type="button"
-              variant="navy"
+              variant="lightblue"
               size="lg"
               className="flex-1"
               onClick={onCancel}
