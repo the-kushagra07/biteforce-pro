@@ -5,10 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Settings, FileText, Calendar, Activity, ArrowLeft } from "lucide-react";
+import { Settings, FileText, Calendar, Activity } from "lucide-react";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface PatientData {
   id: string;
@@ -19,11 +20,25 @@ interface PatientData {
   appointments: any[];
 }
 
+interface MeasurementData {
+  id: string;
+  incisors: string | null;
+  unilateral_left: string | null;
+  unilateral_right: string | null;
+  bilateral_left: string | null;
+  bilateral_right: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 const PatientDashboard = () => {
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLinkForm, setShowLinkForm] = useState(false);
+  const [linkFormData, setLinkFormData] = useState({ patientId: "", name: "" });
+  const [linking, setLinking] = useState(false);
 
   useEffect(() => {
     if (!user || role !== "patient") {
@@ -45,11 +60,57 @@ const PatientDashboard = () => {
 
       if (patient) {
         setPatientData(patient as any);
+      } else {
+        // No patient record linked to this user account
+        setShowLinkForm(true);
       }
     } catch (error: any) {
       toast.error(`Error loading patient data (Code: ${error.code || 'UNKNOWN'})`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLinkAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLinking(true);
+
+    try {
+      // Find patient record by patient_id and name
+      const { data: patient, error: findError } = await supabase
+        .from("patients")
+        .select("*")
+        .eq("patient_id", linkFormData.patientId)
+        .eq("name", linkFormData.name)
+        .maybeSingle();
+
+      if (findError) throw findError;
+
+      if (!patient) {
+        toast.error("No patient record found with this ID and name. Please check your details.");
+        return;
+      }
+
+      if (patient.user_id) {
+        toast.error("This patient record is already linked to another account.");
+        return;
+      }
+
+      // Link the patient record to current user
+      const { error: updateError } = await supabase
+        .from("patients")
+        .update({ user_id: user?.id })
+        .eq("id", patient.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Account linked successfully!");
+      setShowLinkForm(false);
+      fetchPatientData();
+    } catch (error: any) {
+      toast.error(`Error linking account: ${error.message}`);
+    } finally {
+      setLinking(false);
     }
   };
 
@@ -61,19 +122,47 @@ const PatientDashboard = () => {
     );
   }
 
-  if (!patientData) {
+  if (showLinkForm) {
     return (
       <div className="min-h-screen bg-gradient-medical flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">No Patient Record Found</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
-            You need to be registered by a doctor before accessing your dashboard.
-            Please contact your healthcare provider.
+        <Card className="max-w-md w-full p-8">
+          <h2 className="text-2xl font-bold mb-4">Link Your Patient Account</h2>
+          <p className="text-muted-foreground mb-6">
+            Enter your Patient ID and name provided by your doctor to access your dashboard.
           </p>
-          <Button onClick={() => signOut()} variant="secondary">
-            Sign Out
-          </Button>
-        </div>
+          <form onSubmit={handleLinkAccount} className="space-y-4">
+            <div>
+              <Label htmlFor="patientId">Patient ID</Label>
+              <Input
+                id="patientId"
+                type="text"
+                value={linkFormData.patientId}
+                onChange={(e) => setLinkFormData({ ...linkFormData, patientId: e.target.value })}
+                required
+                placeholder="Enter your patient ID"
+              />
+            </div>
+            <div>
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                value={linkFormData.name}
+                onChange={(e) => setLinkFormData({ ...linkFormData, name: e.target.value })}
+                required
+                placeholder="Enter your full name"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" className="flex-1" disabled={linking}>
+                {linking ? "Linking..." : "Link Account"}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => signOut()}>
+                Sign Out
+              </Button>
+            </div>
+          </form>
+        </Card>
       </div>
     );
   }
@@ -129,19 +218,59 @@ const PatientDashboard = () => {
           </Card>
         </div>
 
-        {/* Recent Measurements */}
+        {/* Measurements */}
         <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Recent Measurements</h2>
+          <h2 className="text-xl font-semibold mb-4">Your Measurements</h2>
           {patientData.measurements && patientData.measurements.length > 0 ? (
-            <div className="space-y-3">
-              {patientData.measurements.slice(0, 5).map((m: any) => (
-                <div key={m.id} className="p-4 border rounded-lg hover-lift">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <p className="font-medium">Measurement</p>
+            <div className="space-y-4">
+              {patientData.measurements.map((m: MeasurementData) => (
+                <div key={m.id} className="p-4 border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <p className="font-semibold text-lg">Measurement Record</p>
                     <p className="text-sm text-muted-foreground">
                       {new Date(m.created_at).toLocaleDateString()} at {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {m.incisors && (
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">Incisors</p>
+                        <p className="text-lg font-semibold">{m.incisors}</p>
+                      </div>
+                    )}
+                    {m.unilateral_left && (
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">Unilateral Left</p>
+                        <p className="text-lg font-semibold">{m.unilateral_left}</p>
+                      </div>
+                    )}
+                    {m.unilateral_right && (
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">Unilateral Right</p>
+                        <p className="text-lg font-semibold">{m.unilateral_right}</p>
+                      </div>
+                    )}
+                    {m.bilateral_left && (
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">Bilateral Left</p>
+                        <p className="text-lg font-semibold">{m.bilateral_left}</p>
+                      </div>
+                    )}
+                    {m.bilateral_right && (
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">Bilateral Right</p>
+                        <p className="text-lg font-semibold">{m.bilateral_right}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {m.notes && (
+                    <div className="pt-2 border-t">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Notes</p>
+                      <p className="text-sm">{m.notes}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
