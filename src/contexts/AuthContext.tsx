@@ -107,14 +107,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .maybeSingle();
 
     if (existingRole) {
-      // Role already exists, just navigate
+      // Role already exists, just navigate without showing toast
       setRole(existingRole.role);
       if (existingRole.role === "doctor") {
         navigate("/doctor");
       } else {
         navigate("/patient-dashboard");
       }
-      toast.success("Welcome back!");
       return;
     }
 
@@ -135,7 +134,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       navigate("/patient-dashboard");
     }
-    toast.success("Role selected");
   };
 
   return (

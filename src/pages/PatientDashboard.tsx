@@ -21,7 +21,7 @@ interface PatientData {
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user, role, signOut } = useAuth();
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,8 +62,20 @@ const PatientDashboard = () => {
   }
 
   if (!patientData) {
-    navigate("/role-selection");
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-medical flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">No Patient Record Found</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            You need to be registered by a doctor before accessing your dashboard.
+            Please contact your healthcare provider.
+          </p>
+          <Button onClick={() => signOut()} variant="secondary">
+            Sign Out
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
