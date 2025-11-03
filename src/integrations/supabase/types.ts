@@ -58,6 +58,45 @@ export type Database = {
           },
         ]
       }
+      doctor_verifications: {
+        Row: {
+          created_at: string | null
+          doctor_name: string | null
+          id: string
+          license_image_url: string | null
+          license_number: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          doctor_name?: string | null
+          id?: string
+          license_image_url?: string | null
+          license_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          doctor_name?: string | null
+          id?: string
+          license_image_url?: string | null
+          license_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       measurements: {
         Row: {
           bilateral_left: string | null

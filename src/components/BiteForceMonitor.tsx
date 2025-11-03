@@ -30,6 +30,14 @@ const BiteForceMonitor = ({ onSave, onCancel, saving = false }: BiteForceMonitor
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that at least one field has data
+    const hasData = Object.values(data).some(value => value.trim() !== '');
+    
+    if (!hasData) {
+      return; // Don't save if no data entered
+    }
+    
     onSave(data);
   };
 

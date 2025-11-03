@@ -124,15 +124,26 @@ const DoctorDashboard = () => {
         </div>
 
         {/* Add Patient Button */}
-        <Button
-          variant="medical"
-          size="lg"
-          className="w-full text-lg font-bold"
-          onClick={() => setShowAddPatient(!showAddPatient)}
-        >
-          <Plus className="mr-2 h-5 w-5" />
-          Add New Patient
-        </Button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            variant="medical"
+            size="lg"
+            className="text-lg font-bold"
+            onClick={() => setShowAddPatient(!showAddPatient)}
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Add New Patient
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="text-lg font-bold"
+            onClick={() => navigate("/doctor-verifications")}
+          >
+            <Users className="mr-2 h-5 w-5" />
+            License Verifications
+          </Button>
+        </div>
 
         {/* Add Patient Form */}
         {showAddPatient && (

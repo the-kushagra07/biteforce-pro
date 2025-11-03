@@ -1,1 +1,4 @@
 project_id = "pbfpzendeoycnzcdfhfr"
+
+[functions.extract-license-ocr]
+verify_jwt = true

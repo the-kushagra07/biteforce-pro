@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, BarChart3, Calendar, ArrowLeft, Settings, Loader2, Activity } from "lucide-react";
+import { FileText, BarChart3, Calendar, ArrowLeft, Settings, Loader2, Activity, Trash2 } from "lucide-react";
 import BiteForceMonitor from "@/components/BiteForceMonitor";
 import BluetoothBiteForceMonitor from "@/components/BluetoothBiteForceMonitor";
 import { toast } from "sonner";
@@ -111,6 +111,21 @@ const PatientDetail = () => {
     }
   };
 
+  const handleDeleteMeasurement = async (measurementId: string) => {
+    try {
+      const { error } = await supabase
+        .from("measurements")
+        .delete()
+        .eq("id", measurementId);
+
+      if (error) throw error;
+      toast.success("Measurement deleted successfully!");
+      fetchPatientData();
+    } catch (error: any) {
+      toast.error(`Error: ${error.message || "Failed to delete measurement"} (Code: ${error.code || 'UNKNOWN'})`);
+    }
+  };
+
   const prepareChartData = () => {
     return measurements.slice(0, 10).reverse().map((m, i) => ({
       name: `#${i + 1}`,
@@ -169,7 +184,7 @@ const PatientDetail = () => {
               className="text-lg"
             >
               <Activity className="mr-2 h-5 w-5" />
-              ESP32 BiteForce Monitor
+              ESP32 Monitor
             </Button>
             <Button
               onClick={() => setShowMonitor(true)}
@@ -213,9 +228,19 @@ const PatientDetail = () => {
               <Card key={m.id} className="p-6 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <p className="font-semibold text-lg">Measurement #{measurements.length - i}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(m.created_at).toLocaleDateString()} at {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(m.created_at).toLocaleDateString()} at {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteMeasurement(m.id)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
                   <div className="space-y-1">

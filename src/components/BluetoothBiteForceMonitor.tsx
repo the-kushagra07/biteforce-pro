@@ -115,6 +115,14 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
   };
 
   const saveMeasurements = async () => {
+    // Validate that at least one measurement type has data
+    const hasData = Object.values(measurements).some(arr => arr.length > 0);
+    
+    if (!hasData) {
+      toast.error("No data recorded. Please record at least one measurement before saving.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const { error } = await supabase.from("measurements").insert({
@@ -158,7 +166,7 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
-            <h3 className="text-xl font-semibold">ESP32 BiteForce Monitor</h3>
+            <h3 className="text-xl font-semibold">ESP32 Monitor</h3>
           </div>
           {isConnected ? (
             <Badge variant="default" className="bg-green-500">
