@@ -31,10 +31,20 @@ interface MeasurementData {
   created_at: string;
 }
 
+interface TherapyPlan {
+  id: string;
+  goal_force: string;
+  reps_per_day: number;
+  hold_time: number;
+  instructions: string;
+  updated_at: string;
+}
+
 const PatientDashboard = () => {
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
   const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [therapyPlan, setTherapyPlan] = useState<TherapyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [linkFormData, setLinkFormData] = useState({ patientId: "", name: "" });
@@ -60,6 +70,17 @@ const PatientDashboard = () => {
 
       if (patient) {
         setPatientData(patient as any);
+
+        // Fetch therapy plan
+        const { data: planData } = await supabase
+          .from("therapy_plans")
+          .select("*")
+          .eq("patient_id", patient.id)
+          .maybeSingle();
+
+        if (planData) {
+          setTherapyPlan(planData);
+        }
       } else {
         // No patient record linked to this user account
         setShowLinkForm(true);
@@ -174,7 +195,7 @@ const PatientDashboard = () => {
         <div className="max-w-4xl mx-auto flex items-center justify-between text-white">
           <div>
             <h1 className="text-3xl font-bold">Patient Dashboard</h1>
-            <p className="text-lg mt-2">Welcome, {patientData.name}</p>
+            <p className="text-lg mt-2">Welcome, {patientData?.name}</p>
           </div>
           <div className="flex gap-2">
             <ThemeToggle />
@@ -191,6 +212,38 @@ const PatientDashboard = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
+        {/* Today's Plan */}
+        {therapyPlan && (
+          <Card className="p-6 border-primary/20 bg-primary/5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Today's Plan</h2>
+              <span className="text-sm text-muted-foreground">
+                Updated: {new Date(therapyPlan.updated_at).toLocaleDateString()}
+              </span>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3 mb-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Goal Force</p>
+                <p className="text-2xl font-bold">{therapyPlan.goal_force || "Not set"}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Reps per Day</p>
+                <p className="text-2xl font-bold">{therapyPlan.reps_per_day || "Not set"}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Hold Time</p>
+                <p className="text-2xl font-bold">{therapyPlan.hold_time ? `${therapyPlan.hold_time}s` : "Not set"}</p>
+              </div>
+            </div>
+            {therapyPlan.instructions && (
+              <div className="pt-4 border-t">
+                <p className="text-sm font-medium mb-2">Instructions from your doctor:</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{therapyPlan.instructions}</p>
+              </div>
+            )}
+          </Card>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-6 space-y-2">
@@ -198,7 +251,7 @@ const PatientDashboard = () => {
               <FileText className="h-5 w-5 text-primary" />
               <p className="text-sm text-muted-foreground">Measurements</p>
             </div>
-            <p className="text-3xl font-bold">{patientData.measurements?.length || 0}</p>
+            <p className="text-3xl font-bold">{patientData?.measurements?.length || 0}</p>
           </Card>
 
           <Card className="p-6 space-y-2">
@@ -206,7 +259,7 @@ const PatientDashboard = () => {
               <Calendar className="h-5 w-5 text-primary" />
               <p className="text-sm text-muted-foreground">Appointments</p>
             </div>
-            <p className="text-3xl font-bold">{patientData.appointments?.length || 0}</p>
+            <p className="text-3xl font-bold">{patientData?.appointments?.length || 0}</p>
           </Card>
 
           <Card className="p-6 space-y-2">
@@ -214,14 +267,14 @@ const PatientDashboard = () => {
               <Activity className="h-5 w-5 text-primary" />
               <p className="text-sm text-muted-foreground">Patient ID</p>
             </div>
-            <p className="text-2xl font-bold">{patientData.patient_id}</p>
+            <p className="text-2xl font-bold">{patientData?.patient_id}</p>
           </Card>
         </div>
 
         {/* Measurements */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Your Measurements</h2>
-          {patientData.measurements && patientData.measurements.length > 0 ? (
+          {patientData?.measurements && patientData.measurements.length > 0 ? (
             <div className="space-y-4">
               {patientData.measurements.map((m: MeasurementData) => (
                 <div key={m.id} className="p-4 border rounded-lg space-y-3">

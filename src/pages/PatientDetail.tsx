@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, BarChart3, Calendar, ArrowLeft, Settings, Loader2, Activity, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FileText, BarChart3, Calendar, ArrowLeft, Settings, Loader2, Activity, Trash2, Save } from "lucide-react";
 import BiteForceMonitor from "@/components/BiteForceMonitor";
 import BluetoothBiteForceMonitor from "@/components/BluetoothBiteForceMonitor";
 import { toast } from "sonner";
@@ -50,6 +53,14 @@ const PatientDetail = () => {
   const [showBluetoothMonitor, setShowBluetoothMonitor] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [therapyPlan, setTherapyPlan] = useState<any>(null);
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [planForm, setPlanForm] = useState({
+    goal_force: "",
+    reps_per_day: "",
+    hold_time: "",
+    instructions: "",
+  });
 
   useEffect(() => {
     if (!user) {
@@ -79,6 +90,23 @@ const PatientDetail = () => {
 
       if (measurementsError) throw measurementsError;
       setMeasurements(measurementsData || []);
+
+      // Fetch therapy plan
+      const { data: planData } = await supabase
+        .from("therapy_plans")
+        .select("*")
+        .eq("patient_id", patientId)
+        .maybeSingle();
+
+      if (planData) {
+        setTherapyPlan(planData);
+        setPlanForm({
+          goal_force: planData.goal_force || "",
+          reps_per_day: planData.reps_per_day?.toString() || "",
+          hold_time: planData.hold_time?.toString() || "",
+          instructions: planData.instructions || "",
+        });
+      }
     } catch (error: any) {
       toast.error(`Error: ${error.message || "Failed to load patient data"} (Code: ${error.code || 'UNKNOWN'})`);
     } finally {
@@ -123,6 +151,47 @@ const PatientDetail = () => {
       fetchPatientData();
     } catch (error: any) {
       toast.error(`Error: ${error.message || "Failed to delete measurement"} (Code: ${error.code || 'UNKNOWN'})`);
+    }
+  };
+
+  const handleSaveTherapyPlan = async () => {
+    if (!patient || !user) return;
+
+    setSavingPlan(true);
+    try {
+      const planData = {
+        patient_id: patient.id,
+        doctor_id: user.id,
+        goal_force: planForm.goal_force,
+        reps_per_day: parseInt(planForm.reps_per_day) || null,
+        hold_time: parseInt(planForm.hold_time) || null,
+        instructions: planForm.instructions,
+      };
+
+      if (therapyPlan) {
+        // Update existing plan
+        const { error } = await supabase
+          .from("therapy_plans")
+          .update(planData)
+          .eq("id", therapyPlan.id);
+
+        if (error) throw error;
+      } else {
+        // Create new plan
+        const { error } = await supabase
+          .from("therapy_plans")
+          .insert([planData]);
+
+        if (error) throw error;
+      }
+
+      toast.success("Therapy plan saved successfully!");
+      await fetchPatientData();
+    } catch (error: any) {
+      console.error("Error saving therapy plan:", error);
+      toast.error("Failed to save therapy plan");
+    } finally {
+      setSavingPlan(false);
     }
   };
 
@@ -210,96 +279,167 @@ const PatientDetail = () => {
           </div>
         )}
 
-        <Tabs defaultValue="readings"><TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="readings"><FileText className="w-4 h-4 mr-2" />Readings</TabsTrigger>
-          <TabsTrigger value="graphs"><BarChart3 className="w-4 h-4 mr-2" />Graphs</TabsTrigger>
-          <TabsTrigger value="appointments"><Calendar className="w-4 h-4 mr-2" />Appointments</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="readings">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="readings"><FileText className="w-4 h-4 mr-2" />Readings</TabsTrigger>
+            <TabsTrigger value="graphs"><BarChart3 className="w-4 h-4 mr-2" />Graphs</TabsTrigger>
+            <TabsTrigger value="therapy"><Save className="w-4 h-4 mr-2" />Therapy Plan</TabsTrigger>
+            <TabsTrigger value="appointments"><Calendar className="w-4 h-4 mr-2" />Appointments</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="readings" className="space-y-4 mt-6">
-          {measurements.length === 0 ? (
-            <Card className="p-12 text-center space-y-3">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="text-lg font-medium">No measurements yet</p>
-              <p className="text-sm text-muted-foreground">Add the first measurement to get started</p>
-            </Card>
-          ) : (
-            measurements.map((m, i) => (
-              <Card key={m.id} className="p-6 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <p className="font-semibold text-lg">Measurement #{measurements.length - i}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(m.created_at).toLocaleDateString()} at {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteMeasurement(m.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+          <TabsContent value="readings" className="space-y-4 mt-6">
+            {measurements.length === 0 ? (
+              <Card className="p-12 text-center space-y-3">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+                <p className="text-lg font-medium">No measurements yet</p>
+                <p className="text-sm text-muted-foreground">Add the first measurement to get started</p>
+              </Card>
+            ) : (
+              measurements.map((m, i) => (
+                <Card key={m.id} className="p-6 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <p className="font-semibold text-lg">Measurement #{measurements.length - i}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(m.created_at).toLocaleDateString()} at {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteMeasurement(m.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Unilateral Left</p>
-                    <p className="font-medium">{m.unilateral_left || 'N/A'}</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Unilateral Left</p>
+                      <p className="font-medium">{m.unilateral_left || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Unilateral Right</p>
+                      <p className="font-medium">{m.unilateral_right || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Bilateral Left</p>
+                      <p className="font-medium">{m.bilateral_left || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Bilateral Right</p>
+                      <p className="font-medium">{m.bilateral_right || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Incisors</p>
+                      <p className="font-medium">{m.incisors || 'N/A'}</p>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Unilateral Right</p>
-                    <p className="font-medium">{m.unilateral_right || 'N/A'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Bilateral Left</p>
-                    <p className="font-medium">{m.bilateral_left || 'N/A'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Bilateral Right</p>
-                    <p className="font-medium">{m.bilateral_right || 'N/A'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Incisors</p>
-                    <p className="font-medium">{m.incisors || 'N/A'}</p>
-                  </div>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="graphs" className="mt-6">
+            {measurements.length === 0 ? (
+              <Card className="p-12 text-center space-y-3">
+                <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground" />
+                <p className="text-lg font-medium">No data to display</p>
+                <p className="text-sm text-muted-foreground">Measurements will appear here as graphs</p>
+              </Card>
+            ) : (
+              <Card className="p-4 sm:p-6">
+                <h3 className="text-lg font-semibold mb-4">Bite Force Over Time</h3>
+                <div className="overflow-x-auto">
+                  <ResponsiveContainer width="100%" height={400} minWidth={300}>
+                    <LineChart data={prepareChartData()}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="UL" stroke="hsl(var(--primary))" strokeWidth={2} name="Unilateral Left" />
+                      <Line type="monotone" dataKey="UR" stroke="hsl(var(--success))" strokeWidth={2} name="Unilateral Right" />
+                      <Line type="monotone" dataKey="BL" stroke="hsl(var(--accent))" strokeWidth={2} name="Bilateral Left" />
+                      <Line type="monotone" dataKey="BR" stroke="hsl(var(--destructive))" strokeWidth={2} name="Bilateral Right" />
+                      <Line type="monotone" dataKey="Inc" stroke="hsl(var(--muted-foreground))" strokeWidth={2} name="Incisors" />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </Card>
-            ))
-          )}
-        </TabsContent>
+            )}
+          </TabsContent>
 
-        <TabsContent value="graphs" className="mt-6">
-          {measurements.length === 0 ? (
-            <Card className="p-12 text-center space-y-3">
-              <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="text-lg font-medium">No data to display</p>
-              <p className="text-sm text-muted-foreground">Measurements will appear here as graphs</p>
-            </Card>
-          ) : (
-            <Card className="p-4 sm:p-6">
-              <h3 className="text-lg font-semibold mb-4">Bite Force Over Time</h3>
-              <div className="overflow-x-auto">
-                <ResponsiveContainer width="100%" height={400} minWidth={300}>
-                  <LineChart data={prepareChartData()}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="UL" stroke="hsl(var(--primary))" strokeWidth={2} name="Unilateral Left" />
-                    <Line type="monotone" dataKey="UR" stroke="hsl(var(--success))" strokeWidth={2} name="Unilateral Right" />
-                    <Line type="monotone" dataKey="BL" stroke="hsl(var(--accent))" strokeWidth={2} name="Bilateral Left" />
-                    <Line type="monotone" dataKey="BR" stroke="hsl(var(--destructive))" strokeWidth={2} name="Bilateral Right" />
-                    <Line type="monotone" dataKey="Inc" stroke="hsl(var(--muted-foreground))" strokeWidth={2} name="Incisors" />
-                  </LineChart>
-                </ResponsiveContainer>
+          <TabsContent value="therapy" className="mt-6">
+            <Card className="p-6 space-y-6">
+              <div className="flex items-center justify-between border-b pb-4">
+                <div>
+                  <h3 className="text-xl font-semibold">Therapy Plan Editor</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Configure the patient's therapy plan. This will be visible on their dashboard.
+                  </p>
+                </div>
+                <Button onClick={handleSaveTherapyPlan} disabled={savingPlan}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {savingPlan ? "Saving..." : "Save Plan"}
+                </Button>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="goal_force">Goal Force</Label>
+                  <Input
+                    id="goal_force"
+                    placeholder="e.g., 150N"
+                    value={planForm.goal_force}
+                    onChange={(e) => setPlanForm({ ...planForm, goal_force: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reps_per_day">Reps per Day</Label>
+                  <Input
+                    id="reps_per_day"
+                    type="number"
+                    placeholder="e.g., 10"
+                    value={planForm.reps_per_day}
+                    onChange={(e) => setPlanForm({ ...planForm, reps_per_day: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hold_time">Hold Time (seconds)</Label>
+                  <Input
+                    id="hold_time"
+                    type="number"
+                    placeholder="e.g., 5"
+                    value={planForm.hold_time}
+                    onChange={(e) => setPlanForm({ ...planForm, hold_time: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="instructions">Instructions</Label>
+                <Textarea
+                  id="instructions"
+                  placeholder="Enter detailed instructions for the patient..."
+                  rows={6}
+                  value={planForm.instructions}
+                  onChange={(e) => setPlanForm({ ...planForm, instructions: e.target.value })}
+                />
+              </div>
+
+              <div className="pt-4 border-t">
+                <h4 className="font-medium mb-3">Patient Contact Info</h4>
+                <div className="space-y-2 text-sm">
+                  <p><span className="text-muted-foreground">Patient ID:</span> {patient.patient_id}</p>
+                  <p><span className="text-muted-foreground">Name:</span> {patient.name}</p>
+                  <p><span className="text-muted-foreground">Age:</span> {patient.age} years</p>
+                </div>
               </div>
             </Card>
-          )}
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="appointments"><Card className="p-8 text-center"><Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" /><p className="text-muted-foreground">Coming soon</p></Card></TabsContent>
+          <TabsContent value="appointments"><Card className="p-8 text-center"><Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" /><p className="text-muted-foreground">Coming soon</p></Card></TabsContent>
         </Tabs>
       </div>
 

@@ -201,6 +201,50 @@ export type Database = {
         }
         Relationships: []
       }
+      therapy_plans: {
+        Row: {
+          created_at: string | null
+          doctor_id: string
+          goal_force: string | null
+          hold_time: number | null
+          id: string
+          instructions: string | null
+          patient_id: string
+          reps_per_day: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          doctor_id: string
+          goal_force?: string | null
+          hold_time?: number | null
+          id?: string
+          instructions?: string | null
+          patient_id: string
+          reps_per_day?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          doctor_id?: string
+          goal_force?: string | null
+          hold_time?: number | null
+          id?: string
+          instructions?: string | null
+          patient_id?: string
+          reps_per_day?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapy_plans_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null

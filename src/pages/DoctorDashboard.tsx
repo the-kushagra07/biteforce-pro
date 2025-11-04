@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Settings, Plus, Users, Calendar, Loader2, ArrowLeft } from "lucide-react";
+import { Settings, Plus, Users, Calendar, Loader2, Search, AlertCircle, TrendingDown, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
@@ -22,6 +22,8 @@ const DoctorDashboard = () => {
   const [age, setAge] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [alerts, setAlerts] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user || role !== "doctor") {
@@ -43,11 +45,61 @@ const DoctorDashboard = () => {
       if (error) throw error;
       if (data) {
         setPatients(data);
+        await fetchAlerts(data);
       }
     } catch (error: any) {
       toast.error(`Error: ${error.message || "Failed to load patients"} (Code: ${error.code || 'UNKNOWN'})`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAlerts = async (patientsData: any[]) => {
+    try {
+      const alertsData = [];
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+      for (const patient of patientsData) {
+        // Check for recent measurements
+        const { data: recentMeasurements, error } = await supabase
+          .from("measurements")
+          .select("*")
+          .eq("patient_id", patient.id)
+          .gte("created_at", threeDaysAgo.toISOString())
+          .order("created_at", { ascending: false })
+          .limit(2);
+
+        if (error) continue;
+
+        // Alert if no measurements in 3 days
+        if (!recentMeasurements || recentMeasurements.length === 0) {
+          alertsData.push({
+            type: "no_test",
+            patientName: patient.name,
+            patientId: patient.id,
+            message: `${patient.name} hasn't tested in over 3 days`,
+          });
+        }
+
+        // Alert if force dropped significantly
+        if (recentMeasurements && recentMeasurements.length >= 2) {
+          const latest = parseFloat(recentMeasurements[0]?.incisors || "0");
+          const previous = parseFloat(recentMeasurements[1]?.incisors || "0");
+          if (previous > 0 && latest < previous * 0.8) {
+            alertsData.push({
+              type: "force_drop",
+              patientName: patient.name,
+              patientId: patient.id,
+              message: `${patient.name}'s force dropped ${Math.round((1 - latest/previous) * 100)}%`,
+            });
+          }
+        }
+      }
+
+      setAlerts(alertsData);
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
     }
   };
 
@@ -80,6 +132,11 @@ const DoctorDashboard = () => {
     }
   };
 
+  const filteredPatients = patients.filter((patient) =>
+    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    patient.patient_id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -104,6 +161,43 @@ const DoctorDashboard = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
+        {/* Patient Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search patients by name or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-12"
+          />
+        </div>
+
+        {/* Actionable Alerts */}
+        {alerts.length > 0 && (
+          <Card className="p-6 border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <h3 className="text-lg font-semibold">Actionable Alerts ({alerts.length})</h3>
+            </div>
+            <div className="space-y-2">
+              {alerts.slice(0, 5).map((alert, index) => (
+                <Alert 
+                  key={index} 
+                  className="cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-900 transition-colors" 
+                  onClick={() => navigate(`/patient/${alert.patientId}`)}
+                >
+                  <AlertDescription className="flex items-center gap-2">
+                    {alert.type === "force_drop" && <TrendingDown className="h-4 w-4" />}
+                    {alert.type === "no_test" && <Clock className="h-4 w-4" />}
+                    {alert.message}
+                  </AlertDescription>
+                </Alert>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="p-6 space-y-2">
@@ -207,7 +301,7 @@ const DoctorDashboard = () => {
 
         {/* Patients List */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Patients</h2>
+          <h2 className="text-2xl font-bold mb-4">My Patient List</h2>
           <div className="space-y-3">
             {loading ? (
               // Loading skeletons
@@ -222,14 +316,18 @@ const DoctorDashboard = () => {
                   </div>
                 </Card>
               ))
-            ) : patients.length === 0 ? (
+            ) : filteredPatients.length === 0 ? (
               <Card className="p-12 text-center space-y-3">
                 <Users className="h-12 w-12 mx-auto text-muted-foreground" />
-                <p className="text-lg font-medium">No patients yet</p>
-                <p className="text-sm text-muted-foreground">Add your first patient to get started</p>
+                <p className="text-lg font-medium">
+                  {searchQuery ? "No patients found matching your search." : "No patients yet"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {searchQuery ? "" : "Add your first patient to get started"}
+                </p>
               </Card>
             ) : (
-              patients.map((patient) => (
+              filteredPatients.map((patient) => (
                 <Card
                   key={patient.id}
                   className="p-6 cursor-pointer hover-lift"
