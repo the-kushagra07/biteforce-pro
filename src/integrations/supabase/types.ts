@@ -206,33 +206,33 @@ export type Database = {
           created_at: string | null
           doctor_id: string
           goal_force: string | null
-          hold_time: number | null
           id: string
           instructions: string | null
           patient_id: string
-          reps_per_day: number | null
+          reps_per_session: number | null
+          sessions_per_day: number | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           doctor_id: string
           goal_force?: string | null
-          hold_time?: number | null
           id?: string
           instructions?: string | null
           patient_id: string
-          reps_per_day?: number | null
+          reps_per_session?: number | null
+          sessions_per_day?: number | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           doctor_id?: string
           goal_force?: string | null
-          hold_time?: number | null
           id?: string
           instructions?: string | null
           patient_id?: string
-          reps_per_day?: number | null
+          reps_per_session?: number | null
+          sessions_per_day?: number | null
           updated_at?: string | null
         }
         Relationships: [

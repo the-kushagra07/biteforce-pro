@@ -34,8 +34,8 @@ interface MeasurementData {
 interface TherapyPlan {
   id: string;
   goal_force: string;
-  reps_per_day: number;
-  hold_time: number;
+  reps_per_session: number;
+  sessions_per_day: number;
   instructions: string;
   updated_at: string;
 }
@@ -227,12 +227,12 @@ const PatientDashboard = () => {
                 <p className="text-2xl font-bold">{therapyPlan.goal_force || "Not set"}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Reps per Day</p>
-                <p className="text-2xl font-bold">{therapyPlan.reps_per_day || "Not set"}</p>
+                <p className="text-sm text-muted-foreground">Reps per Session</p>
+                <p className="text-2xl font-bold">{therapyPlan.reps_per_session || "Not set"}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Hold Time</p>
-                <p className="text-2xl font-bold">{therapyPlan.hold_time ? `${therapyPlan.hold_time}s` : "Not set"}</p>
+                <p className="text-sm text-muted-foreground">Sessions per Day</p>
+                <p className="text-2xl font-bold">{therapyPlan.sessions_per_day || "Not set"}</p>
               </div>
             </div>
             {therapyPlan.instructions && (

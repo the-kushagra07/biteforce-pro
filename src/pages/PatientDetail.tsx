@@ -57,8 +57,8 @@ const PatientDetail = () => {
   const [savingPlan, setSavingPlan] = useState(false);
   const [planForm, setPlanForm] = useState({
     goal_force: "",
-    reps_per_day: "",
-    hold_time: "",
+    reps_per_session: "",
+    sessions_per_day: "",
     instructions: "",
   });
 
@@ -102,8 +102,8 @@ const PatientDetail = () => {
         setTherapyPlan(planData);
         setPlanForm({
           goal_force: planData.goal_force || "",
-          reps_per_day: planData.reps_per_day?.toString() || "",
-          hold_time: planData.hold_time?.toString() || "",
+          reps_per_session: planData.reps_per_session?.toString() || "",
+          sessions_per_day: planData.sessions_per_day?.toString() || "",
           instructions: planData.instructions || "",
         });
       }
@@ -163,8 +163,8 @@ const PatientDetail = () => {
         patient_id: patient.id,
         doctor_id: user.id,
         goal_force: planForm.goal_force,
-        reps_per_day: parseInt(planForm.reps_per_day) || null,
-        hold_time: parseInt(planForm.hold_time) || null,
+        reps_per_session: parseInt(planForm.reps_per_session) || null,
+        sessions_per_day: parseInt(planForm.sessions_per_day) || null,
         instructions: planForm.instructions,
       };
 
@@ -396,23 +396,23 @@ const PatientDetail = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reps_per_day">Reps per Day</Label>
+                  <Label htmlFor="reps_per_session">Reps per Session</Label>
                   <Input
-                    id="reps_per_day"
+                    id="reps_per_session"
                     type="number"
                     placeholder="e.g., 10"
-                    value={planForm.reps_per_day}
-                    onChange={(e) => setPlanForm({ ...planForm, reps_per_day: e.target.value })}
+                    value={planForm.reps_per_session}
+                    onChange={(e) => setPlanForm({ ...planForm, reps_per_session: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="hold_time">Hold Time (seconds)</Label>
+                  <Label htmlFor="sessions_per_day">Sessions per Day</Label>
                   <Input
-                    id="hold_time"
+                    id="sessions_per_day"
                     type="number"
-                    placeholder="e.g., 5"
-                    value={planForm.hold_time}
-                    onChange={(e) => setPlanForm({ ...planForm, hold_time: e.target.value })}
+                    placeholder="e.g., 3"
+                    value={planForm.sessions_per_day}
+                    onChange={(e) => setPlanForm({ ...planForm, sessions_per_day: e.target.value })}
                   />
                 </div>
               </div>
