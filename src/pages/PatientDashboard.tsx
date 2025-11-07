@@ -46,9 +46,6 @@ const PatientDashboard = () => {
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [therapyPlan, setTherapyPlan] = useState<TherapyPlan | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showLinkForm, setShowLinkForm] = useState(false);
-  const [linkFormData, setLinkFormData] = useState({ patientId: "", name: "" });
-  const [linking, setLinking] = useState(false);
 
   useEffect(() => {
     if (!user || role !== "patient") {
@@ -82,8 +79,7 @@ const PatientDashboard = () => {
           setTherapyPlan(planData);
         }
       } else {
-        // No patient record linked to this user account
-        setShowLinkForm(true);
+        toast.error("No patient record found. Please contact your doctor to set up your account.");
       }
     } catch (error: any) {
       toast.error(`Error loading patient data (Code: ${error.code || 'UNKNOWN'})`);
@@ -92,48 +88,6 @@ const PatientDashboard = () => {
     }
   };
 
-  const handleLinkAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLinking(true);
-
-    try {
-      // Find patient record by patient_id and name
-      const { data: patient, error: findError } = await supabase
-        .from("patients")
-        .select("*")
-        .eq("patient_id", linkFormData.patientId)
-        .eq("name", linkFormData.name)
-        .maybeSingle();
-
-      if (findError) throw findError;
-
-      if (!patient) {
-        toast.error("No patient record found with this ID and name. Please check your details.");
-        return;
-      }
-
-      if (patient.user_id) {
-        toast.error("This patient record is already linked to another account.");
-        return;
-      }
-
-      // Link the patient record to current user
-      const { error: updateError } = await supabase
-        .from("patients")
-        .update({ user_id: user?.id })
-        .eq("id", patient.id);
-
-      if (updateError) throw updateError;
-
-      toast.success("Account linked successfully!");
-      setShowLinkForm(false);
-      fetchPatientData();
-    } catch (error: any) {
-      toast.error(`Error linking account: ${error.message}`);
-    } finally {
-      setLinking(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -143,50 +97,6 @@ const PatientDashboard = () => {
     );
   }
 
-  if (showLinkForm) {
-    return (
-      <div className="min-h-screen bg-gradient-medical flex items-center justify-center p-6">
-        <Card className="max-w-md w-full p-8">
-          <h2 className="text-2xl font-bold mb-4">Link Your Patient Account</h2>
-          <p className="text-muted-foreground mb-6">
-            Enter your Patient ID and name provided by your doctor to access your dashboard.
-          </p>
-          <form onSubmit={handleLinkAccount} className="space-y-4">
-            <div>
-              <Label htmlFor="patientId">Patient ID</Label>
-              <Input
-                id="patientId"
-                type="text"
-                value={linkFormData.patientId}
-                onChange={(e) => setLinkFormData({ ...linkFormData, patientId: e.target.value })}
-                required
-                placeholder="Enter your patient ID"
-              />
-            </div>
-            <div>
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                value={linkFormData.name}
-                onChange={(e) => setLinkFormData({ ...linkFormData, name: e.target.value })}
-                required
-                placeholder="Enter your full name"
-              />
-            </div>
-            <div className="flex gap-3 pt-2">
-              <Button type="submit" className="flex-1" disabled={linking}>
-                {linking ? "Linking..." : "Link Account"}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => signOut()}>
-                Sign Out
-              </Button>
-            </div>
-          </form>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">

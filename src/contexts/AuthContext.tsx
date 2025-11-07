@@ -8,10 +8,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   role: string | null;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  setUserRole: (role: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,21 +61,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setRole(data?.role || null);
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
-    return { error };
-  };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -93,48 +76,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     navigate("/");
   };
 
-  const setUserRole = async (selectedRole: string) => {
-    if (!user) {
-      toast.error("User not authenticated");
-      return;
-    }
-
-    // Check if role already exists
-    const { data: existingRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (existingRole) {
-      // Role already exists, just navigate without showing toast
-      setRole(existingRole.role);
-      if (existingRole.role === "doctor") {
-        navigate("/doctor");
-      } else {
-        navigate("/patient-dashboard");
-      }
-      return;
-    }
-
-    // Insert new role
-    const { error } = await supabase
-      .from("user_roles")
-      .insert([{ user_id: user.id, role: selectedRole as any }]);
-
-    if (error) {
-      toast.error(`Failed to set role (Code: ${error.code || 'UNKNOWN'})`);
-      console.error("Role insertion error:", error);
-      return;
-    }
-
-    setRole(selectedRole);
-    if (selectedRole === "doctor") {
-      navigate("/doctor");
-    } else {
-      navigate("/patient-dashboard");
-    }
-  };
 
   return (
     <AuthContext.Provider
@@ -143,10 +84,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         session,
         loading,
         role,
-        signUp,
         signIn,
         signOut,
-        setUserRole,
       }}
     >
       {children}

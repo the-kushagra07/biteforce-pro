@@ -10,10 +10,12 @@ const Index = () => {
   const { user, role, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading) {
-      navigate("/role-selection");
+    if (!loading && !user) {
+      navigate("/auth");
+    } else if (user && role) {
+      navigate(role === "doctor" ? "/doctor" : "/patient-dashboard");
     }
-  }, [loading, navigate]);
+  }, [loading, user, role, navigate]);
 
   if (loading) {
     return (

@@ -7,7 +7,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import RoleSelection from "./pages/RoleSelection";
 import PatientLogin from "./pages/PatientLogin";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import PatientDetail from "./pages/PatientDetail";
@@ -29,7 +28,6 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/role-selection" element={<RoleSelection />} />
               <Route path="/patient-login" element={<PatientLogin />} />
               <Route path="/doctor" element={<DoctorDashboard />} />
               <Route path="/patient/:patientId" element={<PatientDetail />} />
