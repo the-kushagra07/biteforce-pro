@@ -60,11 +60,14 @@ export type Database = {
       }
       doctor_verifications: {
         Row: {
+          clinic_name: string | null
           created_at: string | null
-          doctor_name: string | null
+          doctor_name: string
           id: string
-          license_image_url: string | null
-          license_number: string | null
+          issuing_board: string | null
+          license_image_url: string
+          license_number: string
+          practice_address: string | null
           status: string | null
           updated_at: string | null
           user_id: string
@@ -72,11 +75,14 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          clinic_name?: string | null
           created_at?: string | null
-          doctor_name?: string | null
+          doctor_name: string
           id?: string
-          license_image_url?: string | null
-          license_number?: string | null
+          issuing_board?: string | null
+          license_image_url: string
+          license_number: string
+          practice_address?: string | null
           status?: string | null
           updated_at?: string | null
           user_id: string
@@ -84,11 +90,14 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          clinic_name?: string | null
           created_at?: string | null
-          doctor_name?: string | null
+          doctor_name?: string
           id?: string
-          license_image_url?: string | null
-          license_number?: string | null
+          issuing_board?: string | null
+          license_image_url?: string
+          license_number?: string
+          practice_address?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string
@@ -145,30 +154,39 @@ export type Database = {
         Row: {
           age: number
           created_at: string | null
+          date_of_birth: string | null
           doctor_id: string
+          email: string | null
           id: string
           name: string
           patient_id: string
+          phone: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           age: number
           created_at?: string | null
+          date_of_birth?: string | null
           doctor_id: string
+          email?: string | null
           id?: string
           name: string
           patient_id: string
+          phone?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           age?: number
           created_at?: string | null
+          date_of_birth?: string | null
           doctor_id?: string
+          email?: string | null
           id?: string
           name?: string
           patient_id?: string
+          phone?: string | null
           updated_at?: string | null
           user_id?: string | null
         }

@@ -18,7 +18,10 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [isDoctor, setIsDoctor] = useState(false);
   const [doctorName, setDoctorName] = useState("");
+  const [clinicName, setClinicName] = useState("");
+  const [practiceAddress, setPracticeAddress] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
+  const [issuingBoard, setIssuingBoard] = useState("");
   const [licenseImage, setLicenseImage] = useState<File | null>(null);
   const { signIn, user, role } = useAuth();
   const navigate = useNavigate();
@@ -38,8 +41,8 @@ const Auth = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 200 * 1024) {
-        toast.error("Image must be less than 200KB");
+      if (file.size > 500 * 1024) {
+        toast.error("Image must be less than 500KB");
         e.target.value = "";
         return;
       }
@@ -73,7 +76,7 @@ const Auth = () => {
       return;
     }
 
-    if (isDoctor && (!doctorName || !licenseNumber || !licenseImage)) {
+    if (isDoctor && (!doctorName || !clinicName || !practiceAddress || !licenseNumber || !issuingBoard || !licenseImage)) {
       toast.error("Please fill in all doctor verification fields");
       return;
     }
@@ -123,7 +126,10 @@ const Auth = () => {
           .insert({
             user_id: authData.user.id,
             doctor_name: doctorName,
+            clinic_name: clinicName,
+            practice_address: practiceAddress,
             license_number: licenseNumber,
+            issuing_board: issuingBoard,
             license_image_url: publicUrl,
             status: 'pending',
           });
@@ -143,7 +149,10 @@ const Auth = () => {
       setPassword("");
       setConfirmPassword("");
       setDoctorName("");
+      setClinicName("");
+      setPracticeAddress("");
       setLicenseNumber("");
+      setIssuingBoard("");
       setLicenseImage(null);
       setIsDoctor(false);
     } catch (error: any) {
@@ -305,8 +314,10 @@ const Auth = () => {
 
               {isDoctor && (
                 <div className="space-y-4 p-4 border border-border rounded-md bg-muted/50">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">All fields are mandatory for doctor verification</p>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="doctor-name">Doctor Name</Label>
+                    <Label htmlFor="doctor-name">Full Legal Name *</Label>
                     <Input
                       id="doctor-name"
                       type="text"
@@ -318,7 +329,31 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="license-number">License Number</Label>
+                    <Label htmlFor="clinic-name">Clinic/Hospital Name *</Label>
+                    <Input
+                      id="clinic-name"
+                      type="text"
+                      value={clinicName}
+                      onChange={(e) => setClinicName(e.target.value)}
+                      required={isDoctor}
+                      placeholder="City Medical Center"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="practice-address">Practice Address *</Label>
+                    <Input
+                      id="practice-address"
+                      type="text"
+                      value={practiceAddress}
+                      onChange={(e) => setPracticeAddress(e.target.value)}
+                      required={isDoctor}
+                      placeholder="123 Main St, City, State, ZIP"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="license-number">Medical License Number *</Label>
                     <Input
                       id="license-number"
                       type="text"
@@ -330,8 +365,20 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="issuing-board">Issuing State/Country Medical Board *</Label>
+                    <Input
+                      id="issuing-board"
+                      type="text"
+                      value={issuingBoard}
+                      onChange={(e) => setIssuingBoard(e.target.value)}
+                      required={isDoctor}
+                      placeholder="e.g., National Medical Commission (India)"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="license-image">
-                      License Image (max 200KB)
+                      License Image (max 500KB) *
                     </Label>
                     <div className="flex items-center gap-2">
                       <Input
@@ -347,7 +394,7 @@ const Auth = () => {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Upload a clear photo of your medical license
+                      Upload a clear photo of your medical license for manual verification
                     </p>
                   </div>
                 </div>

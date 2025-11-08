@@ -19,6 +19,9 @@ const DoctorDashboard = () => {
   const [patients, setPatients] = useState<any[]>([]);
   const [patientId, setPatientId] = useState("");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -113,15 +116,21 @@ const DoctorDashboard = () => {
           doctor_id: user?.id,
           patient_id: patientId,
           name,
+          email,
+          date_of_birth: dateOfBirth,
+          phone: phone || null,
           age: parseInt(age),
         },
       ]);
 
       if (error) throw error;
       
-      toast.success("Patient added successfully!");
+      toast.success("Patient added successfully! An invitation email will be sent to the patient.");
       setPatientId("");
       setName("");
+      setEmail("");
+      setDateOfBirth("");
+      setPhone("");
       setAge("");
       setShowAddPatient(false);
       fetchPatients();
@@ -218,26 +227,15 @@ const DoctorDashboard = () => {
         </div>
 
         {/* Add Patient Button */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            variant="medical"
-            size="lg"
-            className="text-lg font-bold"
-            onClick={() => setShowAddPatient(!showAddPatient)}
-          >
-            <Plus className="mr-2 h-5 w-5" />
-            Add New Patient
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="text-lg font-bold"
-            onClick={() => navigate("/doctor-verifications")}
-          >
-            <Users className="mr-2 h-5 w-5" />
-            License Verifications
-          </Button>
-        </div>
+        <Button
+          variant="medical"
+          size="lg"
+          className="w-full text-lg font-bold"
+          onClick={() => setShowAddPatient(!showAddPatient)}
+        >
+          <Plus className="mr-2 h-5 w-5" />
+          Add New Patient
+        </Button>
 
         {/* Add Patient Form */}
         {showAddPatient && (
@@ -250,17 +248,48 @@ const DoctorDashboard = () => {
                   value={patientId}
                   onChange={(e) => setPatientId(e.target.value)}
                   required
-                  placeholder="e.g., 100"
+                  placeholder="e.g., P-1001"
                 />
               </div>
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  placeholder="Patient name"
+                  placeholder="Jane Doe"
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="jane.doe@email.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone (Optional)</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 123-4567"
                 />
               </div>
               <div>

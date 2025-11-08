@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, BarChart3, Calendar, ArrowLeft, Settings, Loader2, Activity, Trash2, Save } from "lucide-react";
+import { FileText, BarChart3, Calendar, ArrowLeft, Loader2, Activity, Trash2, Save } from "lucide-react";
 import BiteForceMonitor from "@/components/BiteForceMonitor";
 import BluetoothBiteForceMonitor from "@/components/BluetoothBiteForceMonitor";
 import { toast } from "sonner";
@@ -230,16 +230,27 @@ const PatientDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-gradient-lightblue px-6 py-8 rounded-b-[2rem]">
+      <div className="bg-gradient-medical px-6 py-8 rounded-b-[2rem]">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <Button variant="theme" onClick={() => navigate(-1)} className="flex items-center gap-2"><ArrowLeft className="h-4 w-4" />Back</Button>
-              <h1 className="text-3xl font-bold">Patient Details</h1>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(-1)} 
+                className="text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-3xl font-bold text-white">Patient Details</h1>
             </div>
-            <div className="flex gap-2"><ThemeToggle /><Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="hover:bg-background/10"><Settings className="h-5 w-5" /></Button></div>
+            <ThemeToggle />
           </div>
-          <div className="space-y-1 text-lg"><p>ID: {patient.patient_id}</p><p>Name: {patient.name}</p><p>Age: {patient.age}</p></div>
+          <div className="space-y-1 text-lg text-white">
+            <p>ID: {patient.patient_id}</p>
+            <p>Name: {patient.name}</p>
+            <p>Age: {patient.age}</p>
+          </div>
         </div>
       </div>
 
@@ -258,7 +269,7 @@ const PatientDetail = () => {
             <Button
               onClick={() => setShowMonitor(true)}
               size="lg"
-              variant="theme"
+              variant="medical"
               className="text-lg"
             >
               <FileText className="mr-2 h-5 w-5" />

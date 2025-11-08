@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Settings, FileText, Calendar, Activity } from "lucide-react";
+import { Settings, FileText, Calendar, Activity, User } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,9 @@ interface PatientData {
   patient_id: string;
   name: string;
   age: number;
+  email?: string;
+  date_of_birth?: string;
+  phone?: string;
   measurements: any[];
   appointments: any[];
 }
@@ -105,7 +108,9 @@ const PatientDashboard = () => {
         <div className="max-w-4xl mx-auto flex items-center justify-between text-white">
           <div>
             <h1 className="text-3xl font-bold">Patient Dashboard</h1>
-            <p className="text-lg mt-2">Welcome, {patientData?.name}</p>
+            <p className="text-lg mt-2">
+              Welcome, {patientData?.name?.split(' ')[0] || patientData?.name}!
+            </p>
           </div>
           <div className="flex gap-2">
             <ThemeToggle />
@@ -122,6 +127,55 @@ const PatientDashboard = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
+        {/* Patient Profile Card */}
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <User className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">My Profile</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Full Name</p>
+              <p className="font-medium">{patientData?.name || "Not available"}</p>
+            </div>
+            {patientData?.email && (
+              <div className="space-y-1">
+                <p className="text-muted-foreground">Email</p>
+                <p className="font-medium">{patientData.email}</p>
+              </div>
+            )}
+            {patientData?.date_of_birth && (
+              <div className="space-y-1">
+                <p className="text-muted-foreground">Date of Birth</p>
+                <p className="font-medium">
+                  {new Date(patientData.date_of_birth).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Age</p>
+              <p className="font-medium">
+                {patientData?.date_of_birth 
+                  ? Math.floor((new Date().getTime() - new Date(patientData.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+                  : patientData?.age || "Not available"}
+              </p>
+            </div>
+            {patientData?.phone && (
+              <div className="space-y-1">
+                <p className="text-muted-foreground">Phone</p>
+                <p className="font-medium">{patientData.phone}</p>
+              </div>
+            )}
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Patient ID</p>
+              <p className="font-medium">{patientData?.patient_id}</p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground pt-2 border-t">
+            This information is managed by your doctor. Contact your doctor to update any details.
+          </p>
+        </Card>
+
         {/* Today's Plan */}
         {therapyPlan && (
           <Card className="p-6 border-primary/20 bg-primary/5">
@@ -155,7 +209,7 @@ const PatientDashboard = () => {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="p-6 space-y-2">
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -170,14 +224,6 @@ const PatientDashboard = () => {
               <p className="text-sm text-muted-foreground">Appointments</p>
             </div>
             <p className="text-3xl font-bold">{patientData?.appointments?.length || 0}</p>
-          </Card>
-
-          <Card className="p-6 space-y-2">
-            <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
-              <p className="text-sm text-muted-foreground">Patient ID</p>
-            </div>
-            <p className="text-2xl font-bold">{patientData?.patient_id}</p>
           </Card>
         </div>
 

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { ArrowLeft, LogOut, User, Bell, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, LogOut, User, Bell, Trash2, Loader2, Mail, MessageSquare } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -81,18 +81,18 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-lightblue px-6 py-6">
+      <div className="bg-gradient-medical px-6 py-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
-              variant="theme"
+              variant="ghost"
+              size="icon"
               onClick={() => navigate(role === "doctor" ? "/doctor" : "/patient-dashboard")}
-              className="flex items-center gap-2"
+              className="text-white hover:bg-white/10"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold">Settings</h1>
+            <h1 className="text-2xl font-bold text-white">Settings</h1>
           </div>
           <ThemeToggle />
         </div>
@@ -165,6 +165,25 @@ const Settings = () => {
                 }
               />
             </div>
+          </div>
+        </Card>
+
+        {/* Contact Us */}
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Contact Us</h2>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <a href="mailto:support@biteforce.app" className="text-primary hover:underline">
+                support@biteforce.app
+              </a>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Have questions or need help? We're here to assist you with any concerns about your account or the app.
+            </p>
           </div>
         </Card>
 

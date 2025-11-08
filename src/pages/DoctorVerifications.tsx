@@ -85,12 +85,12 @@ const DoctorVerifications = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <Button 
-                variant="theme" 
+                variant="ghost"
+                size="icon"
                 onClick={() => navigate("/doctor")} 
-                className="flex items-center gap-2"
+                className="text-white hover:bg-white/10"
               >
-                <ArrowLeft className="h-4 w-4" />
-                Back
+                <ArrowLeft className="h-5 w-5" />
               </Button>
               <h1 className="text-3xl font-bold text-white">Doctor Verifications</h1>
             </div>
