@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LogIn, Loader2, Upload } from "lucide-react";
+import { LogIn, Loader2, Upload, KeyRound } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -23,6 +23,9 @@ const Auth = () => {
   const [licenseNumber, setLicenseNumber] = useState("");
   const [issuingBoard, setIssuingBoard] = useState("");
   const [licenseImage, setLicenseImage] = useState<File | null>(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const { signIn, user, role } = useAuth();
   const navigate = useNavigate();
 
@@ -32,11 +35,25 @@ const Auth = () => {
     document.documentElement.classList.remove("light");
   }, []);
 
+  // Listen for PASSWORD_RECOVERY event
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Don't redirect if in password recovery mode
+    if (isPasswordRecovery) return;
+    
     if (user && role) {
       navigate(role === "doctor" ? "/doctor" : "/patient-dashboard");
     }
-  }, [user, role, navigate]);
+  }, [user, role, navigate, isPasswordRecovery]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -185,6 +202,107 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmNewPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Password updated successfully!");
+        setIsPasswordRecovery(false);
+        setNewPassword("");
+        setConfirmNewPassword("");
+        // Sign out and let them sign in with new password
+        await supabase.auth.signOut();
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Password Recovery Form
+  if (isPasswordRecovery) {
+    return (
+      <div className="min-h-screen bg-gradient-medical flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-8 space-y-6 animate-fade-in">
+          <div className="text-center space-y-2">
+            <KeyRound className="h-12 w-12 mx-auto text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">Reset Password</h1>
+            <p className="text-muted-foreground">
+              Enter your new password below.
+            </p>
+          </div>
+
+          <form onSubmit={handlePasswordUpdate} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                minLength={6}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+              <Input
+                id="confirm-new-password"
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                minLength={6}
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              variant="medical"
+              size="lg"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating password...
+                </>
+              ) : (
+                <>
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Update Password
+                </>
+              )}
+            </Button>
+          </form>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-medical flex items-center justify-center p-4">
