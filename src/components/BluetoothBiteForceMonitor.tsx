@@ -1,4 +1,5 @@
 /// <reference path="../types/bluetooth.d.ts" />
+// Bluetooth connection with acceptAllDevices support
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
