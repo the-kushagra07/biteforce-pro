@@ -94,7 +94,7 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
     setIsConnecting(true);
     try {
       const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
+        filters: [{ namePrefix: "BiteForce" }],
         optionalServices: ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"],
       });
 
