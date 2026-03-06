@@ -55,13 +55,28 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
     const decoder = new TextDecoder("utf-8");
     const decoded = decoder.decode(value).trim();
 
-    // Check if ESP32 is sending a menu/type change command (e.g., "TYPE:unilateralRight")
-    if (decoded.startsWith("TYPE:")) {
-      const newType = decoded.substring(5).trim();
-      const validType = MEASUREMENT_TYPES.find(t => t.value === newType);
-      if (validType) {
-        setCurrentMeasurementType(validType.value);
-        console.log("Menu changed to:", validType.label);
+    // Check if ESP32 is sending a menu/type change command
+    // Supports formats: "TYPE:unilateralRight", "TYPE:Unilateral Right", "TYPE:unilateral right", "TYPE:2", etc.
+    if (decoded.toUpperCase().startsWith("TYPE:")) {
+      const newType = decoded.substring(5).trim().toLowerCase();
+      console.log("Received TYPE command, raw:", decoded, "parsed:", newType);
+      
+      // Match by exact value, label (case-insensitive), or index number
+      const validType = MEASUREMENT_TYPES.find(t => 
+        t.value.toLowerCase() === newType || 
+        t.label.toLowerCase() === newType ||
+        t.label.toLowerCase().replace(/\s+/g, '') === newType.replace(/\s+/g, '')
+      );
+      
+      // Also try matching by index (e.g., "TYPE:0", "TYPE:1", etc.)
+      const indexMatch = !validType && /^\d+$/.test(newType) ? MEASUREMENT_TYPES[parseInt(newType)] : undefined;
+      
+      const matched = validType || indexMatch;
+      if (matched) {
+        setCurrentMeasurementType(matched.value);
+        console.log("Menu changed to:", matched.label);
+      } else {
+        console.warn("Unknown menu type received:", newType);
       }
       return;
     }
