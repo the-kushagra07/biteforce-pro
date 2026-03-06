@@ -10,6 +10,7 @@ interface Bluetooth {
 interface RequestDeviceOptions {
   filters?: BluetoothLEScanFilter[];
   optionalServices?: BluetoothServiceUUID[];
+  acceptAllDevices?: boolean;
 }
 
 interface BluetoothLEScanFilter {

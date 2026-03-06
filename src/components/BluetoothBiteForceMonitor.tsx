@@ -1,4 +1,5 @@
 /// <reference path="../types/bluetooth.d.ts" />
+// Bluetooth connection with acceptAllDevices support
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,9 +47,9 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
 
     setIsConnecting(true);
     try {
-      // Request Bluetooth device
+      // Request Bluetooth device - accept all devices to find ESP32
       const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"] }],
+        acceptAllDevices: true,
         optionalServices: ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"],
       });
 
