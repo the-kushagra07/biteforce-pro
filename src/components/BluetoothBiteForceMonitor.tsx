@@ -1,7 +1,6 @@
 /// <reference path="../types/bluetooth.d.ts" />
-// Bluetooth connection with acceptAllDevices support
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,30 +13,77 @@ interface BluetoothBiteForceMonitorProps {
   onMeasurementSaved?: () => void;
 }
 
+const MEASUREMENT_TYPES = [
+  { value: "unilateralLeft", label: "Unilateral Left" },
+  { value: "unilateralRight", label: "Unilateral Right" },
+  { value: "bilateralLeft", label: "Bilateral Left" },
+  { value: "bilateralRight", label: "Bilateral Right" },
+  { value: "incisors", label: "Incisors" },
+] as const;
+
+type MeasurementType = typeof MEASUREMENT_TYPES[number]["value"];
+
 const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothBiteForceMonitorProps) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentForce, setCurrentForce] = useState<number>(0);
-  const [measurements, setMeasurements] = useState<{
-    unilateralLeft: number[];
-    unilateralRight: number[];
-    bilateralLeft: number[];
-    bilateralRight: number[];
-    incisors: number[];
-  }>({
+  const [measurements, setMeasurements] = useState<Record<MeasurementType, number[]>>({
     unilateralLeft: [],
     unilateralRight: [],
     bilateralLeft: [],
     bilateralRight: [],
     incisors: [],
   });
-  const [currentMeasurementType, setCurrentMeasurementType] = useState<
-    "unilateralLeft" | "unilateralRight" | "bilateralLeft" | "bilateralRight" | "incisors"
-  >("unilateralLeft");
+  const [currentMeasurementType, setCurrentMeasurementType] = useState<MeasurementType>("unilateralLeft");
   const [isSaving, setIsSaving] = useState(false);
 
   const deviceRef = useRef<BluetoothDevice | null>(null);
   const characteristicRef = useRef<BluetoothRemoteGATTCharacteristic | null>(null);
+  const measurementTypeRef = useRef<MeasurementType>(currentMeasurementType);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    measurementTypeRef.current = currentMeasurementType;
+  }, [currentMeasurementType]);
+
+  const handleForceData = useCallback((event: Event) => {
+    const target = event.target as unknown as BluetoothRemoteGATTCharacteristic;
+    const value = target.value;
+    if (!value) return;
+
+    // Decode as UTF-8 string from ESP32
+    const decoder = new TextDecoder("utf-8");
+    const decoded = decoder.decode(value).trim();
+
+    // Check if ESP32 is sending a menu/type change command (e.g., "TYPE:unilateralRight")
+    if (decoded.startsWith("TYPE:")) {
+      const newType = decoded.substring(5).trim();
+      const validType = MEASUREMENT_TYPES.find(t => t.value === newType);
+      if (validType) {
+        setCurrentMeasurementType(validType.value);
+        console.log("Menu changed to:", validType.label);
+      }
+      return;
+    }
+
+    // Parse as force value
+    const force = parseFloat(decoded);
+    if (isNaN(force)) {
+      console.warn("Received non-numeric data:", decoded);
+      return;
+    }
+
+    console.log("Received force:", force, "N");
+    setCurrentForce(force);
+
+    // Auto-record: automatically add every valid reading to the current measurement type
+    if (force > 0) {
+      setMeasurements(prev => ({
+        ...prev,
+        [measurementTypeRef.current]: [...prev[measurementTypeRef.current], force],
+      }));
+    }
+  }, []);
 
   const connectToESP32 = async () => {
     if (!navigator.bluetooth) {
@@ -47,7 +93,6 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
 
     setIsConnecting(true);
     try {
-      // Request Bluetooth device - accept all devices to find ESP32
       const device = await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
         optionalServices: ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"],
@@ -55,17 +100,14 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
 
       deviceRef.current = device;
 
-      // Connect to GATT server
       const server = await device.gatt?.connect();
       if (!server) throw new Error("Failed to connect to GATT server");
 
-      // Get service and characteristic
       const service = await server.getPrimaryService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
       const characteristic = await service.getCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
       characteristicRef.current = characteristic;
 
-      // Start notifications
       await characteristic.startNotifications();
       characteristic.addEventListener("characteristicvaluechanged", handleForceData);
 
@@ -92,35 +134,20 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
     toast.info("Disconnected from ESP32");
   };
 
-  const handleForceData = (event: Event) => {
-    const target = event.target as unknown as BluetoothRemoteGATTCharacteristic;
-    const value = target.value;
-    if (!value) return;
-
-    // Parse the force value (assuming ESP32 sends float as 4 bytes)
-    const dataView = new DataView(value.buffer);
-    const force = dataView.getFloat32(0, true); // true for little-endian
-
-    setCurrentForce(force);
-    console.log("Received force:", force, "N");
-  };
-
-  const recordMeasurement = () => {
-    if (currentForce > 0) {
-      setMeasurements((prev) => ({
-        ...prev,
-        [currentMeasurementType]: [...prev[currentMeasurementType], currentForce],
-      }));
-      toast.success(`Recorded ${currentForce.toFixed(2)}N for ${currentMeasurementType}`);
-    }
+  const clearMeasurements = () => {
+    setMeasurements({
+      unilateralLeft: [],
+      unilateralRight: [],
+      bilateralLeft: [],
+      bilateralRight: [],
+      incisors: [],
+    });
   };
 
   const saveMeasurements = async () => {
-    // Validate that at least one measurement type has data
     const hasData = Object.values(measurements).some(arr => arr.length > 0);
-    
     if (!hasData) {
-      toast.error("No data recorded. Please record at least one measurement before saving.");
+      toast.error("No data recorded yet.");
       return;
     }
 
@@ -128,24 +155,18 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
     try {
       const { error } = await supabase.from("measurements").insert({
         patient_id: patientId,
-        unilateral_left: measurements.unilateralLeft.map((v) => v.toFixed(2)).join(", "),
-        unilateral_right: measurements.unilateralRight.map((v) => v.toFixed(2)).join(", "),
-        bilateral_left: measurements.bilateralLeft.map((v) => v.toFixed(2)).join(", "),
-        bilateral_right: measurements.bilateralRight.map((v) => v.toFixed(2)).join(", "),
-        incisors: measurements.incisors.map((v) => v.toFixed(2)).join(", "),
-        notes: "Recorded via Bluetooth ESP32",
+        unilateral_left: measurements.unilateralLeft.map(v => v.toFixed(2)).join(", "),
+        unilateral_right: measurements.unilateralRight.map(v => v.toFixed(2)).join(", "),
+        bilateral_left: measurements.bilateralLeft.map(v => v.toFixed(2)).join(", "),
+        bilateral_right: measurements.bilateralRight.map(v => v.toFixed(2)).join(", "),
+        incisors: measurements.incisors.map(v => v.toFixed(2)).join(", "),
+        notes: "Recorded via Bluetooth ESP32 (auto)",
       });
 
       if (error) throw error;
 
       toast.success("Measurements saved successfully!");
-      setMeasurements({
-        unilateralLeft: [],
-        unilateralRight: [],
-        bilateralLeft: [],
-        bilateralRight: [],
-        incisors: [],
-      });
+      clearMeasurements();
       onMeasurementSaved?.();
     } catch (error: any) {
       console.error("Error saving measurements:", error);
@@ -160,6 +181,8 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
       disconnectFromESP32();
     };
   }, []);
+
+  const totalReadings = Object.values(measurements).reduce((sum, arr) => sum + arr.length, 0);
 
   return (
     <div className="space-y-6">
@@ -197,53 +220,39 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
             <div className="text-center p-6 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground mb-2">Current Force Reading</p>
               <p className="text-4xl font-bold text-primary">{currentForce.toFixed(2)} N</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Auto-recording to: <span className="font-semibold text-foreground">{MEASUREMENT_TYPES.find(t => t.value === currentMeasurementType)?.label}</span>
+              </p>
+              <p className="text-xs text-muted-foreground">Total readings: {totalReadings}</p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Measurement Type</label>
+              <label className="text-sm font-medium">Active Measurement Type (synced with OLED)</label>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { value: "unilateralLeft", label: "Unilateral Left" },
-                  { value: "unilateralRight", label: "Unilateral Right" },
-                  { value: "bilateralLeft", label: "Bilateral Left" },
-                  { value: "bilateralRight", label: "Bilateral Right" },
-                  { value: "incisors", label: "Incisors" },
-                ].map((type) => (
+                {MEASUREMENT_TYPES.map((type) => (
                   <Button
                     key={type.value}
                     variant={currentMeasurementType === type.value ? "default" : "outline"}
-                    onClick={() =>
-                      setCurrentMeasurementType(
-                        type.value as typeof currentMeasurementType
-                      )
-                    }
+                    onClick={() => setCurrentMeasurementType(type.value)}
                     className="text-xs"
                   >
                     {type.label}
+                    {measurements[type.value].length > 0 && (
+                      <span className="ml-1 text-[10px] opacity-70">({measurements[type.value].length})</span>
+                    )}
                   </Button>
                 ))}
               </div>
             </div>
 
-            <Button
-              onClick={recordMeasurement}
-              className="w-full"
-              variant="secondary"
-              size="lg"
-            >
-              Record Current Reading
-            </Button>
-
             <div className="space-y-2 text-sm">
               <p className="font-medium">Recorded Measurements:</p>
-              {Object.entries(measurements).map(([key, values]) => (
-                <div key={key} className="flex justify-between">
-                  <span className="text-muted-foreground capitalize">
-                    {key.replace(/([A-Z])/g, " $1")}:
-                  </span>
-                  <span className="font-mono">
-                    {values.length > 0
-                      ? values.map((v) => v.toFixed(2)).join(", ")
+              {MEASUREMENT_TYPES.map(({ value, label }) => (
+                <div key={value} className="flex justify-between">
+                  <span className="text-muted-foreground">{label}:</span>
+                  <span className="font-mono text-xs max-w-[60%] text-right truncate">
+                    {measurements[value].length > 0
+                      ? measurements[value].map(v => v.toFixed(2)).join(", ")
                       : "No data"}
                   </span>
                 </div>
@@ -251,23 +260,19 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
             </div>
 
             <div className="flex gap-2">
-              <Button
-                onClick={disconnectFromESP32}
-                variant="outline"
-                className="flex-1"
-              >
+              <Button onClick={disconnectFromESP32} variant="outline" className="flex-1">
                 Disconnect
+              </Button>
+              <Button onClick={clearMeasurements} variant="outline" className="flex-1">
+                Clear
               </Button>
               <Button
                 onClick={saveMeasurements}
-                disabled={
-                  isSaving ||
-                  Object.values(measurements).every((arr) => arr.length === 0)
-                }
+                disabled={isSaving || totalReadings === 0}
                 className="flex-1"
               >
                 <Save className="mr-2 h-4 w-4" />
-                {isSaving ? "Saving..." : "Save to Database"}
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
@@ -275,15 +280,12 @@ const BluetoothBiteForceMonitor = ({ patientId, onMeasurementSaved }: BluetoothB
       </Card>
 
       <Card className="p-4 bg-blue-50 dark:bg-blue-950">
-        <h4 className="font-semibold mb-2 text-sm">Instructions:</h4>
+        <h4 className="font-semibold mb-2 text-sm">How it works:</h4>
         <ol className="text-xs space-y-1 text-muted-foreground">
-          <li>1. Power on your ESP32 BiteForce sensor</li>
-          <li>2. Click "Connect to ESP32" and select your device</li>
-          <li>3. Select the measurement type (e.g., Unilateral Left)</li>
-          <li>4. Have the patient bite on the FSR sensor</li>
-          <li>5. Click "Record Current Reading" to save the value</li>
-          <li>6. Repeat for different measurement types</li>
-          <li>7. Click "Save to Database" to store all measurements</li>
+          <li>1. Connect to your ESP32 BiteForce sensor</li>
+          <li>2. The active measurement type syncs with your OLED menu automatically</li>
+          <li>3. All force readings are auto-recorded in real-time</li>
+          <li>4. Click "Save" when you're done to store all measurements</li>
         </ol>
       </Card>
     </div>
